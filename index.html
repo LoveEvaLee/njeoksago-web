@@ -257,7 +257,9 @@ textarea:focus{outline:1px solid var(--amber);outline-offset:-1px;border-color:t
 .obs-log b{color:var(--amber);font-weight:400}
 .btn.mono{font-family:var(--mono);font-size:10.5px;letter-spacing:.12em}
 .panel.synth{border-left:2px solid var(--amber-line)}
-.synth-p{margin:6px 0 0;font-size:13px;line-height:1.95;color:var(--silver)}
+.synth-narr{margin:6px 0 0;font-size:12px;line-height:1.85;color:var(--silver2);padding-bottom:8px;border-bottom:1px solid var(--hair)}
+.synth-narr b{color:var(--amber)}
+.synth-p{margin:8px 0 0;font-size:13px;line-height:1.95;color:var(--silver)}
 .synth-p b{color:var(--vc,var(--amber))}
 /* 수집 사례 카드 */
 .caserow{display:flex;gap:10px;align-items:flex-start;padding:11px 0;border-top:1px solid var(--hair);
@@ -824,14 +826,19 @@ JSON만 출력:
 {"scenes":[{"summary":"장면 한 줄","facts":{"scene_facts 키":"값"},"concepts":[{"concept_id":"...","facts":{"키":"값"}}]}],
 "narrative_context":["지명·구체 숫자·부수 정보(해석 금지)"],
 "u_notes":[{"label":"어휘에 없는 주목 요소(최대 2)","note":"단정 없는 중립적 한 줄"}],
-"psych_note":"꿈의 사건 구조로 설명 가능할 때만 '~로 연결해 볼 수도 있습니다' 화법 한 문장, 아니면 null"}
-규칙: 고유명사·숫자는 narrative_context로만. 상징 의미 부여 금지. 장면이 나뉘면 scenes를 나누세요(최대 4).`;
+"psych_note":"꿈의 사건 구조로 설명 가능할 때만 '~로 연결해 볼 수도 있습니다' 화법 한 문장, 아니면 null",
+"goal":{"서술":"서술에 명시된 핵심 목표(예: 아이들에게 돌아가기), 없으면 null","status":"달성|진행중|좌절|불명"}}
+규칙: 고유명사·숫자는 narrative_context로만. 상징 의미 부여 금지. 장면이 나뉘면 scenes를 나누세요(최대 4).
+행동의 성공과 목표의 완료를 구분하세요 — 이동·시도 중이면 outcome은 in_progress, goal.status는 진행중. 도착·재회·해소가 서술에 없으면 달성으로 적지 마세요.`;
   const out=await sample.json(prompt,{modelTier:"default"});
   return sanitize(out);
 }
 /* F6 검증 게이트 — Call 1 출력을 그대로 믿지 않는다 */
 function sanitize(o){
   const cmap=Object.fromEntries(KB.extract_view.map(c=>[c.concept_id,c]));
+  const GSTAT=["달성","진행중","좌절","불명"];
+  const goal=(o&&o.goal&&o.goal["서술"]&&GSTAT.includes(o.goal.status))
+    ?{서술:String(o.goal["서술"]).slice(0,60),status:o.goal.status}:null;
   const scenes=[],uext=[];
   for(const s of (o?.scenes||[]).slice(0,4)){
     const facts={};
@@ -855,7 +862,8 @@ function sanitize(o){
     narrative_context:(o?.narrative_context||[]).slice(0,8).map(String),
     u_notes:[...(o?.u_notes||[]),...uext].slice(0,2)
       .map(u=>({label:String(u.label||"").slice(0,30),note:String(u.note||"").slice(0,80)})),
-    psych_note:typeof o?.psych_note==="string"?o.psych_note.slice(0,160):null};
+    psych_note:typeof o?.psych_note==="string"?o.psych_note.slice(0,160):null,
+    goal};
 }
 /* 라이트 모드 — 별칭·키워드 간이 추출 */
 function liteExtract(text){
@@ -865,12 +873,16 @@ function liteExtract(text){
   const f={};
   if(/무사|다치지 않|멀쩡/.test(text))f.injury="none";
   if(/잡혔|붙잡/.test(text))f.outcome="caught";
-  else if(/도망쳤|벗어났|빠져나/.test(text))f.outcome="escaped";
+  else if(/도망쳤|벗어났|빠져나(왔|간)/.test(text))f.outcome="escaped";
   else if(/멈췄|끝났|해결/.test(text))f.outcome="resolved";
+  else if(/향하는|향했|가는 중|매달려|버티/.test(text))f.outcome="in_progress";
   if(/무서|두려|공포/.test(text))f.emotion="fear";
   if(/브레이크|통제.{0,4}(불능|상실)|멈출 수 없/.test(text))f.control="lost";
+  let goal=null;
+  const gm=text.match(/([가-힣]{1,8}(?:한테|에게|께))\s*돌아가/)||text.match(/([가-힣]{1,6})(?:으로|로)\s*(?:돌아가|향하)/);
+  if(gm)goal={서술:gm[1].trim()+" 돌아가기",status:/도착했|만났|돌아왔/.test(text)?"달성":"진행중"};
   return {scenes:[{summary:"간이 분석",facts:f,concepts:cons.slice(0,8)}],
-    narrative_context:[],u_notes:[],psych_note:null};
+    narrative_context:[],u_notes:[],psych_note:null,goal};
 }
 function liteFacts(t,c){
   const f={};
@@ -1380,8 +1392,10 @@ function finish(){
       return "길흉을 가를 만한 사건보다 일상의 잔상에 가까운 꿈이었어요. 요즘의 하루가 꿈에 그대로 배어 나온 정도로 보면 충분해요.";
     return ""; // 판정유보 — 바로 아래 '왜 판정을 유보했나요' 패널이 이 역할을 함
   })();
-  const synthPanel=synthText?`<div class="panel synth"><div class="panel-h">${ICON("book")}<span class="sec">이 판정을 한 문단으로</span></div>
-    <p class="synth-p">${synthText}</p></div>`:"";
+  const g=cur.ex.goal;
+  const narrLine=g?`<p class="synth-narr">이 꿈의 목표는 <b>‘${esc(g.서술)}’</b>${g.status==="달성"?" — 꿈 안에서 이뤄졌어요.":g.status==="진행중"?"였어요. 꿈은 그 길 위에서 끝났고 — 도착 장면은 아직이에요. 아래 판정은 완주가 아니라 여정의 장면들로만 계산했어요.":g.status==="좌절"?"였지만 꿈 안에서는 막혔어요.":"였어요."}</p>`:"";
+  const synthPanel=(synthText||narrLine)?`<div class="panel synth"><div class="panel-h">${ICON("book")}<span class="sec">이 판정을 한 문단으로</span></div>
+    ${narrLine}${synthText?`<p class="synth-p">${synthText}</p>`:""}</div>`:"";
   const approxPanel=isHold?`<div class="panel approx" id="approx-slot">
       <div class="panel-h">${ICON("info")}<span class="sec">왜 판정을 유보했나요</span></div>
       <div id="approx-out"><p class="hint">${MODE==="full"
