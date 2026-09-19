@@ -17,6 +17,7 @@
   --hold:#646C82;  --hold-soft:#646C821F;
   --orna:#6E79A8; --moon:#EFE7D6; --moon-dark:#161D33;
   --glow:rgba(147,168,222,.18); --glow-warm:rgba(227,168,99,.16);
+  --ico-info:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cpath d='M12 16v-4M12 8h.01'/%3E%3C/svg%3E");
   --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
   --serif:"Gowun Batang",serif;
   --sans:"Noto Sans KR",system-ui,sans-serif;
@@ -263,46 +264,89 @@ textarea:focus{outline:1px solid var(--amber);outline-offset:-1px;border-color:t
 .synth-p b{color:var(--vc,var(--amber))}
 /* 꿈 성좌 (구조 스켈레톤 — 디자인은 Pencil 이식 예정) */
 .ins-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
-.kg-btn{border:1px solid var(--hair2);background:transparent;color:var(--amber);border-radius:999px;
-  padding:5px 12px;font-family:var(--mono);font-size:10px;letter-spacing:.08em;cursor:pointer}
-.kg-btn:hover{border-color:var(--amber-line);background:var(--amber-soft)}
-#kg-overlay{position:fixed;inset:0;z-index:60;background:#070A12F0;display:flex;align-items:center;justify-content:center;padding:20px}
-.kg-wrap{width:min(800px,100%);max-height:100%;overflow:auto;background:var(--plate);border:1px solid var(--hair2);border-radius:8px;padding:18px 20px}
-.kg-top{display:flex;align-items:center;gap:12px}
-.kg-top b{font-family:var(--serif);font-size:18px;font-weight:400}
-.kg-sub{flex:1;font-family:var(--mono);font-size:9.5px;letter-spacing:.06em;color:var(--silver3)}
-.kg-svg{display:block;width:100%;height:auto;margin-top:12px;background:
-  radial-gradient(1.4px 1.4px at 18% 22%,var(--moon) 50%,transparent 51%),
-  radial-gradient(1px 1px at 72% 12%,var(--silver3) 50%,transparent 51%),
-  radial-gradient(1.2px 1.2px at 85% 68%,var(--moon) 50%,transparent 51%),
-  radial-gradient(1px 1px at 8% 78%,var(--silver3) 50%,transparent 51%),
-  radial-gradient(1.4px 1.4px at 45% 90%,var(--moon) 50%,transparent 51%),var(--void);
-  border:1px solid var(--hair);border-radius:6px}
-.kg-edge{stroke:var(--silver3);opacity:.4;stroke-linecap:round}
-.kg-node .kg-halo{fill:currentColor;opacity:.14}
-.kg-node .kg-star{fill:currentColor;stroke:var(--void);stroke-width:1}
-.kg-node.d-길{color:var(--good)}.kg-node.d-흉{color:var(--bad)}.kg-node.d-중립{color:var(--silver2)}
-.kg-label{fill:var(--silver2);font-family:var(--mono);font-size:9.5px;text-anchor:middle}
-.kg-legend{margin:10px 2px 0;font-size:11px;line-height:1.7;color:var(--silver3)}
+.kg-btn{border:1px solid var(--hair2);background:transparent;color:var(--amber);border-radius:3px;
+  padding:6px 13px;font-family:var(--mono);font-size:10px;letter-spacing:.1em;cursor:pointer}
+.kg-btn:hover{border-color:var(--amber);background:var(--amber-soft)}
+/* ── 꿈 성좌 모달 (캔버스 A06 / AW06) ── */
+#kg-overlay{position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;
+  padding:44px 14px 24px;
+  background:radial-gradient(60% 46% at 50% 34%,#141C3866,#070A1200 72%),#070A12F2}
+.kg-wrap{position:relative;width:min(1080px,100%);max-height:100%;overflow:auto;background:var(--plate);
+  border:1px solid var(--hair2);border-radius:8px;padding:0;
+  box-shadow:0 22px 60px -16px rgba(0,0,0,.82)}
+.kg-wrap::before{content:"";position:absolute;left:1px;right:1px;top:0;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(201,210,230,.5),transparent)}
+.kg-top{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;
+  padding:18px;border-bottom:1px solid var(--hair)}
+.kg-ttl{display:flex;flex-direction:column;gap:7px;min-width:0}
+.kg-top b{font-family:var(--serif);font-size:21px;font-weight:400;letter-spacing:.02em;color:var(--silver)}
+.kg-sub{font-family:var(--mono);font-size:9.5px;letter-spacing:.08em;color:var(--silver3)}
+#kg-close{display:grid;place-items:center;width:26px;height:26px;flex:none;padding:0;
+  border:1px solid var(--hair2);border-radius:3px;background:transparent;color:var(--silver2);
+  font-size:13px;line-height:1;cursor:pointer}
+#kg-close:hover{border-color:var(--amber);color:var(--amber);background:transparent}
+.kg-sky{padding:14px 14px 0}
+.kg-svg{display:block;width:100%;height:auto;background:
+  radial-gradient(1.4px 1.4px at 6% 12%,var(--moon) 50%,transparent 51%),
+  radial-gradient(1px 1px at 93% 9%,var(--moon) 50%,transparent 51%),
+  radial-gradient(1.2px 1.2px at 32% 5%,var(--moon) 50%,transparent 51%),
+  radial-gradient(1.4px 1.4px at 66% 44%,var(--moon) 50%,transparent 51%),
+  radial-gradient(1px 1px at 5% 86%,var(--moon) 50%,transparent 51%),
+  radial-gradient(1.2px 1.2px at 97% 66%,var(--moon) 50%,transparent 51%),
+  radial-gradient(1px 1px at 47% 93%,var(--moon) 50%,transparent 51%),#080C18;
+  border:1px solid var(--hair);border-radius:4px}
 .kg-node{cursor:pointer}
+.kg-node .kg-halo{fill:currentColor;opacity:.12}
+.kg-node .kg-star{fill:currentColor;stroke:none}
+.kg-node .kg-ring{fill:none;stroke:var(--amber);stroke-width:1.3;opacity:0;transition:opacity .2s}
+.kg-node.d-길{color:var(--good)}.kg-node.d-흉{color:var(--bad)}.kg-node.d-중립{color:var(--silver2)}
+.kg-label{fill:var(--silver3);font-family:var(--mono);font-size:9px;letter-spacing:.04em;text-anchor:middle}
+.kg-node:hover .kg-halo{opacity:.22}
+.kg-node:hover .kg-label{fill:var(--silver2)}
+.kg-node.sel .kg-star{fill:var(--silver)}
+.kg-node.sel .kg-halo{fill:var(--amber);opacity:.22}
+.kg-node.sel .kg-ring{opacity:1}
+.kg-node.sel .kg-label{fill:var(--amber)}
 .kg-inner{transform-box:fill-box;transform-origin:center}
 @keyframes kg-wobble{0%{transform:rotate(0) translate(0,0)}18%{transform:translate(2.5px,-2px) rotate(4deg)}
   38%{transform:translate(-2px,1.5px) rotate(-3deg)}58%{transform:translate(1.2px,-1px) rotate(2deg)}
   78%{transform:translate(-.6px,.5px) rotate(-1deg)}100%{transform:translate(0,0) rotate(0)}}
 .kg-inner.wobble{animation:kg-wobble .55s ease-out}
 @media (prefers-reduced-motion:reduce){.kg-inner.wobble{animation:none}}
-.kg-node.sel .kg-star{stroke:var(--amber);stroke-width:1.6}
-.kg-node.sel .kg-halo{opacity:.3}
-.kg-edge{transition:opacity .2s,stroke .2s}
+.kg-edge{stroke:var(--silver2);opacity:.4;stroke-linecap:round;transition:opacity .25s,stroke .25s}
 .kg-edge.lit{stroke:var(--amber);opacity:.85}
-.kg-list{margin-top:12px;border-top:1px solid var(--hair);padding-top:4px}
-.kg-list-h{margin:8px 0 2px;font-size:12px;color:var(--silver2)}
-.kg-list-h b{color:var(--amber);font-family:var(--serif);font-weight:400}
-.kg-row{display:flex;gap:10px;align-items:center;padding:9px 0;border-bottom:1px solid var(--hair);font-size:12px}
-.kg-row:last-child{border-bottom:0}
-.kg-d{font-family:var(--mono);font-size:9.5px;color:var(--silver3);flex:none;width:38px}
+.kg-legend{display:flex;gap:9px;align-items:flex-start;margin:0;
+  padding:13px 18px 15px;font-size:10px;line-height:1.75;color:var(--silver3)}
+.kg-legend::before{content:"";flex:none;width:11px;height:11px;margin-top:3px;background:currentColor;
+  -webkit-mask:var(--ico-info) center/contain no-repeat;mask:var(--ico-info) center/contain no-repeat}
+.kg-list{margin:0;border-top:1px solid var(--hair);padding:16px 18px 18px}
+.kg-list[hidden]{display:none}
+.kg-list-h{margin:0 0 10px;font-family:var(--serif);font-size:15px;color:var(--silver)}
+.kg-list-h .bul,.kg-list-h b{color:var(--amber);font-family:var(--serif);font-weight:400}
+.kg-row{display:flex;gap:11px;align-items:center;padding:11px 0;border-top:1px solid var(--hair);font-size:11.5px}
 .kg-row .chip{flex:none}
+.kg-d{font-family:var(--mono);font-size:9.5px;letter-spacing:.04em;color:var(--silver3);flex:none;width:40px}
 .kg-t{flex:1;min-width:0;color:var(--silver2);line-height:1.6;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.kg-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;
+  min-height:300px;margin:0;padding:20px;background:#080C18;border:1px solid var(--hair);border-radius:4px}
+.kg-empty .orb{width:44px;height:44px;border-radius:50%;background:#A9B1C61F;flex:none}
+.kg-empty p{margin:0;font-size:12.5px;line-height:1.85;text-align:center;color:var(--silver2);max-width:258px}
+.kg-empty span{font-family:var(--mono);font-size:9px;letter-spacing:.12em;color:var(--hold)}
+@media (min-width:1000px){
+  #kg-overlay{padding:40px}
+  .kg-top{padding:22px 26px}
+  .kg-top b{font-size:25px}
+  .kg-sub{font-size:10px}
+  #kg-close{width:30px;height:30px}
+  .kg-sky{padding:18px 26px 0}
+  .kg-label{font-size:10px}
+  .kg-legend{padding:16px 26px 18px;font-size:11px;align-items:center}
+  .kg-legend::before{margin-top:0}
+  .kg-list{padding:18px 26px 24px}
+  .kg-list-h{font-size:17px;margin-bottom:12px}
+  .kg-row{gap:16px;padding:13px 0;font-size:12.5px}
+  .kg-d{width:56px;font-size:10px}
+}
 
 /* 수집 사례 카드 */
 .caserow{display:flex;gap:10px;align-items:flex-start;padding:11px 0;border-top:1px solid var(--hair);
@@ -1667,6 +1711,9 @@ function buildDreamGraph(){
 }
 function kgLayout(g,W,H){
   // 결정적 force 배치: id 해시 초기 위치 → 반발+간선 인력+중심 중력 120회
+  // 화면 크기에 비례해 반발·간선 길이·여백을 스케일(기준 540px)
+  const S=Math.max(.5,Math.min(1.25,Math.min(W,H)/540));
+  const REP=2200*S*S, REST=90*S, MX=Math.max(46,52*S), MY=Math.max(26,40*S);
   const P={}; const ids=g.nodes.map(n=>n.id); const idx=Object.fromEntries(ids.map((d,i)=>[d,i]));
   g.nodes.forEach(n=>{const a=kgHash(n.id)*Math.PI*2, r=(0.22+0.28*kgHash(n.id+"r"))*Math.min(W,H);
     P[n.id]={x:W/2+Math.cos(a)*r, y:H/2+Math.sin(a)*r};});
@@ -1674,16 +1721,27 @@ function kgLayout(g,W,H){
   for(let it=0;it<120;it++){
     for(const a1 of ids)for(const b1 of ids){ if(a1>=b1)continue;
       const A=P[a1],B=P[b1]; let dx=A.x-B.x,dy=A.y-B.y; let d2=dx*dx+dy*dy||1; const d=Math.sqrt(d2);
-      const rep=2200/d2; dx/=d; dy/=d;
+      const rep=REP/d2; dx/=d; dy/=d;
       A.x+=dx*rep; A.y+=dy*rep; B.x-=dx*rep; B.y-=dy*rep; }
     for(const e of E){ const A=P[e.s],B=P[e.t];
       let dx=B.x-A.x,dy=B.y-A.y; const d=Math.sqrt(dx*dx+dy*dy)||1;
-      const pull=0.004*Math.min(e.w,4)*(d-90); dx/=d; dy/=d;
+      const pull=0.004*Math.min(e.w,4)*(d-REST); dx/=d; dy/=d;
       A.x+=dx*pull; A.y+=dy*pull; B.x-=dx*pull; B.y-=dy*pull; }
     for(const n1 of ids){ const A=P[n1];
       A.x+=(W/2-A.x)*0.012; A.y+=(H/2-A.y)*0.012;
-      A.x=Math.max(46,Math.min(W-46,A.x)); A.y=Math.max(40,Math.min(H-40,A.y)); }
+      A.x=Math.max(MX,Math.min(W-MX,A.x)); A.y=Math.max(MY,Math.min(H-MY-8,A.y)); }
   }
+  // 배치 결과를 하늘 영역에 꽉 차게 정규화(비율 유지) — 작은 화면에서 뭉치는 것 방지
+  let mnX=1e9,mxX=-1e9,mnY=1e9,mxY=-1e9;
+  for(const id of ids){const A=P[id];
+    mnX=Math.min(mnX,A.x);mxX=Math.max(mxX,A.x);mnY=Math.min(mnY,A.y);mxY=Math.max(mxY,A.y);}
+  const bw=Math.max(1,mxX-mnX), bh=Math.max(1,mxY-mnY);
+  const availW=W-2*MX, availH=H-2*MY-14;
+  const k=Math.min(availW/bw,availH/bh,2.2);
+  const kx=Math.min(availW/bw,k*1.6), ky=k;   // 넓은 하늘에서는 가로로 최대 1.6배까지만 펼침
+  for(const id of ids){const A=P[id];
+    A.x=MX+(availW-bw*kx)/2+(A.x-mnX)*kx;
+    A.y=MY+(availH-bh*ky)/2+(A.y-mnY)*ky;}
   return P;
 }
 function renderConstellation(){
@@ -1691,10 +1749,18 @@ function renderConstellation(){
   if(!ov){ ov=document.createElement("div"); ov.id="kg-overlay"; document.body.appendChild(ov); }
   const g=buildDreamGraph();
   if(g.nodes.length<2){
-    ov.innerHTML=`<div class="kg-wrap"><div class="kg-top"><b>꿈 성좌</b><button class="kg-btn" id="kg-close">닫기 ✕</button></div>
-      <p class="hint" style="padding:30px 0">상징이 2개 이상 기록되면 별자리를 그릴 수 있어요. (지금 기록 ${g.records}회)</p></div>`;
+    ov.innerHTML=`<div class="kg-wrap">
+      <div class="kg-top"><div class="kg-ttl"><b>꿈 성좌</b>
+        <span class="kg-sub">기록 ${g.records}회 · 상징 ${g.nodes.length} · 연결 0</span></div>
+        <button id="kg-close" aria-label="닫기">✕</button></div>
+      <div class="kg-sky"><div class="kg-empty"><span class="orb"></span>
+        <p>상징이 2개 이상 기록되면<br>별자리를 그릴 수 있어요.</p>
+        <span>NEED 2+ SYMBOLS</span></div></div>
+      <p class="kg-legend">별을 누르면 그 상징이 실린 꿈들이 아래 펼쳐져요 · 크기=꾼 횟수 · 선 굵기=함께 나온 횟수 · 색=판정 성향</p></div>`;
   }else{
-    const W=Math.min(innerWidth-40,760), H=Math.min(innerHeight-160,540);
+    const wide=innerWidth>=1000;
+    const W=wide?Math.min(innerWidth-132,1028):Math.min(innerWidth-56,720);
+    const H=wide?440:Math.min(Math.round(W*0.96),360);
     const P=kgLayout(g,W,H);
     const maxC=g.nodes[0].count, maxW=Math.max(...g.edges.map(e=>e.w),1);
     const dirOf=n=>n.dirs.길>n.dirs.흉?"길":n.dirs.흉>n.dirs.길?"흉":"중립";
@@ -1702,14 +1768,15 @@ function renderConstellation(){
       `<line class="kg-edge" data-s="${esc(e.s)}" data-t="${esc(e.t)}" x1="${P[e.s].x.toFixed(1)}" y1="${P[e.s].y.toFixed(1)}" x2="${P[e.t].x.toFixed(1)}" y2="${P[e.t].y.toFixed(1)}" stroke-width="${(0.6+2.4*e.w/maxW).toFixed(1)}"><title>${esc(cLabel(e.s))} ↔ ${esc(cLabel(e.t))} · 함께 ${e.w}회</title></line>`).join("");
     const nodes=g.nodes.map(n=>{const p=P[n.id], r=5+9*Math.sqrt(n.count/maxC);
       return `<g class="kg-node d-${dirOf(n)}" data-id="${esc(n.id)}" transform="translate(${p.x.toFixed(1)},${p.y.toFixed(1)})">
-        <g class="kg-inner"><circle class="kg-halo" r="${(r+5).toFixed(1)}"/><circle class="kg-star" r="${r.toFixed(1)}"/></g>
+        <g class="kg-inner"><circle class="kg-halo" r="${(r*1.85).toFixed(1)}"/><circle class="kg-ring" r="${(r+6).toFixed(1)}"/><circle class="kg-star" r="${r.toFixed(1)}"/></g>
         <text class="kg-label" y="${(r+13).toFixed(1)}">${esc(cLabel(n.id))} ×${n.count}</text>
         <title>${esc(cLabel(n.id))} · ${n.count}회 (길 ${n.dirs.길}·흉 ${n.dirs.흉})</title></g>`;}).join("");
     ov.innerHTML=`<div class="kg-wrap">
-      <div class="kg-top"><b>꿈 성좌</b><span class="kg-sub">기록 ${g.records}회 · 상징 ${g.nodes.length} · 연결 ${g.edges.length}</span>
-        <button class="kg-btn" id="kg-close">닫기 ✕</button></div>
-      <svg class="kg-svg" viewBox="0 0 ${W} ${H}" role="img" aria-label="꿈 상징 공출현 별자리">${edges}${nodes}</svg>
-      <p class="kg-legend">별을 누르면 그 상징이 실린 꿈들이 아래 펼쳐져요. 별의 크기 = 꾼 횟수 · 선의 굵기 = 함께 나온 횟수 · 색 = 판정 성향. 판정 계산과는 무관한 관찰 뷰입니다.</p>
+      <div class="kg-top"><div class="kg-ttl"><b>꿈 성좌</b>
+        <span class="kg-sub">기록 ${g.records}회 · 상징 ${g.nodes.length} · 연결 ${g.edges.length}</span></div>
+        <button id="kg-close" aria-label="닫기">✕</button></div>
+      <div class="kg-sky"><svg class="kg-svg" viewBox="0 0 ${W} ${H}" role="img" aria-label="꿈 상징 공출현 별자리">${edges}${nodes}</svg></div>
+      <p class="kg-legend">별을 누르면 그 상징이 실린 꿈들이 아래 펼쳐져요 · 크기=꾼 횟수 · 선 굵기=함께 나온 횟수 · 색=판정 성향 · 판정 계산과는 무관한 관찰 뷰입니다</p>
       <div class="kg-list" id="kg-list" hidden></div></div>`;
   }
   ov.hidden=false;
@@ -1727,7 +1794,7 @@ function renderConstellation(){
     ov.querySelectorAll(`.kg-edge[data-s="${CSS.escape(id)}"],.kg-edge[data-t="${CSS.escape(id)}"]`)
       .forEach(x=>x.classList.add("lit"));
     const rows=loadJ().filter(r=>entryConcepts(r).includes(id)).slice(0,8);
-    list.innerHTML=`<p class="kg-list-h">✦ <b>${esc(cLabel(id))}</b>${josaKG(cLabel(id))} 나온 꿈 ${rows.length}건</p>`
+    list.innerHTML=`<p class="kg-list-h"><span class="bul">✦</span> <b>${esc(cLabel(id))}</b>${josaKG(cLabel(id))} 나온 꿈 ${rows.length}건</p>`
       +rows.map(r=>`<div class="kg-row"><span class="kg-d">${dkey(r.ts).slice(5)}</span>
         <span class="chip dir-${r.verdict.call==="길몽"?"길":r.verdict.call==="흉몽"?"흉":"중립"}">${esc(vlabel(vkey(r.verdict.call)))}</span>
         <span class="kg-t">${esc(r.text.slice(0,64))}${r.text.length>64?"…":""}</span></div>`).join("");
