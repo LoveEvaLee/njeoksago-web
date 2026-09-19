@@ -1358,24 +1358,26 @@ function finish(){
   const synthText=(()=>{
     const by=d=>e.evidence.filter(x=>x.rule.direction===d).sort((a,b)=>b.score-a.score);
     const G=by("길"),B=by("흉"),Z=by("중립");
-    const cl=x=>x?x.rule.claim.replace(/\.$/,""):"";
-    const part=x=>x&&x.match<1?" — 다만 꿈의 조건과 부분적으로만 맞아 확신은 낮춰 잡았어요":"";
-    const tail=" 이 판정은 앞일을 정하는 예언이 아니라, 전통 자료들이 이런 꿈을 읽어온 방향을 정리한 것입니다.";
+    const cl=x=>x?esc(x.rule.claim.replace(/\.$/,"")):"";
+    const josa=(w,a,b)=>{const c=w.charCodeAt(w.length-1);return w+((c>=0xAC00&&(c-0xAC00)%28>0)?a:b);};
+    const josa2=(w,a,b)=>{const c=w.charCodeAt(w.length-1);return (c>=0xAC00&&(c-0xAC00)%28>0)?a:b;};
+    const lab=x=>x&&x.rule.concept?esc(cLabel(x.rule.concept)):"이번 장면";
+    const part=x=>x&&x.match<1?" (꿈의 정황과 완전히 겹치진 않았어요)":"";
     if(e.call==="길몽")
-      return `전통 자료 ${G.length}계열이 순한 쪽으로 모여 <b>길몽</b>으로 읽었습니다. 중심이 된 근거는 “${esc(cl(G[0]))}”입니다${part(G[0])}.`
-        +(B.length?` 조심스럽게 읽는 자료도 ${B.length}계열 있었지만, 무게가 순한 쪽으로 충분히 기울었습니다.`:"")+tail;
+      return `꿈의 중심에 있던 ${josa(lab(G[0]),"이","가")} 좋은 신호로 읽혔어요. 전통적으로 “${cl(G[0])}”${josa2(cl(G[0]),"이라고","라고")} 봐요${part(G[0])}.`
+        +(B.length?" 마음에 걸릴 만한 장면도 있었지만, 좋은 신호의 무게가 더 컸어요.":"")
+        +" 편하게 받아들여도 되는 꿈이에요.";
     if(e.call==="흉몽")
-      return `전통 자료 ${B.length}계열이 조심하라는 쪽으로 모여 <b>흉몽</b>으로 읽었습니다. 중심이 된 근거는 “${esc(cl(B[0]))}”입니다${part(B[0])}.`
-        +(G.length?` 좋게 읽는 자료도 ${G.length}계열 있었지만 무게가 밀렸습니다.`:"")
-        +` 흉몽 판정은 “나쁜 일이 일어난다”가 아니라, 자료들이 이 장면을 경계 신호로 읽어왔다는 뜻이에요.`+tail;
+      return `${josa(lab(B[0]),"이","가")} 조심하라는 신호로 읽혔어요. 전통적으로 “${cl(B[0])}”${josa2(cl(B[0]),"이라고","라고")} 봐요${part(B[0])}.`
+        +(G.length?" 좋게 읽히는 장면도 있었지만 무게는 조심 쪽이었어요.":"")
+        +" 나쁜 일이 정해졌다는 뜻은 아니에요 — 요즘 마음 쓰이던 일이 있다면 한 번 점검해 보라는 정도로 받아들이면 충분해요.";
     if(e.call==="혼합"){
-      const lean=e.balance>0.15?"저울은 순한 쪽으로 조금 기울어 있지만 확정할 정도는 아니었어요."
-        :e.balance<-0.15?"저울은 조심할 쪽으로 조금 기울어 있지만 확정할 정도는 아니었어요."
-        :"저울이 거의 팽팽했습니다.";
-      return `이 꿈에는 좋게 읽는 근거와 조심스럽게 읽는 근거가 <b>함께</b> 잡혀서, 한쪽으로 몰지 않았습니다. 순한 쪽 중심 근거는 “${esc(cl(G[0]))}”, 조심할 쪽 중심 근거는 “${esc(cl(B[0]))}”입니다. ${lean}`+tail;
+      const lean=e.balance>0.15?" 굳이 따지면 좋은 쪽이 조금 더 무거웠어요."
+        :e.balance<-0.15?" 굳이 따지면 조심 쪽이 조금 더 무거웠어요.":"";
+      return `이번 꿈에는 서로 다른 신호가 함께 있었어요. ${lab(G[0])} 장면은 “${cl(G[0])}”${josa2(cl(G[0]),"으로","로")}, ${lab(B[0])} 장면은 “${cl(B[0])}”${josa2(cl(B[0]),"으로","로")} 읽혀요. 어느 한쪽이 뚜렷하게 세지 않아서 억지로 정하지 않았어요 — 좋은 흐름과 조심할 지점이 같이 있는 꿈이라고 보면 돼요.${lean}`;
     }
     if(e.call==="중립")
-      return `이 꿈에서는 길흉을 가를 만한 사건보다 ${Z.length?`일상·중립 신호(${Z.length}계열)`:"중립적인 장면"}가 우세했습니다. 특별한 방향을 부여하기보다 최근 생활의 잔상으로 보는 쪽이 자료의 읽기와 맞습니다.`+tail;
+      return "길흉을 가를 만한 사건보다 일상의 잔상에 가까운 꿈이었어요. 요즘의 하루가 꿈에 그대로 배어 나온 정도로 보면 충분해요.";
     return ""; // 판정유보 — 바로 아래 '왜 판정을 유보했나요' 패널이 이 역할을 함
   })();
   const synthPanel=synthText?`<div class="panel synth"><div class="panel-h">${ICON("book")}<span class="sec">이 판정을 한 문단으로</span></div>
