@@ -284,6 +284,25 @@ textarea:focus{outline:1px solid var(--amber);outline-offset:-1px;border-color:t
 .kg-node.d-길{color:var(--good)}.kg-node.d-흉{color:var(--bad)}.kg-node.d-중립{color:var(--silver2)}
 .kg-label{fill:var(--silver2);font-family:var(--mono);font-size:9.5px;text-anchor:middle}
 .kg-legend{margin:10px 2px 0;font-size:11px;line-height:1.7;color:var(--silver3)}
+.kg-node{cursor:pointer}
+.kg-inner{transform-box:fill-box;transform-origin:center}
+@keyframes kg-wobble{0%{transform:rotate(0) translate(0,0)}18%{transform:translate(2.5px,-2px) rotate(4deg)}
+  38%{transform:translate(-2px,1.5px) rotate(-3deg)}58%{transform:translate(1.2px,-1px) rotate(2deg)}
+  78%{transform:translate(-.6px,.5px) rotate(-1deg)}100%{transform:translate(0,0) rotate(0)}}
+.kg-inner.wobble{animation:kg-wobble .55s ease-out}
+@media (prefers-reduced-motion:reduce){.kg-inner.wobble{animation:none}}
+.kg-node.sel .kg-star{stroke:var(--amber);stroke-width:1.6}
+.kg-node.sel .kg-halo{opacity:.3}
+.kg-edge{transition:opacity .2s,stroke .2s}
+.kg-edge.lit{stroke:var(--amber);opacity:.85}
+.kg-list{margin-top:12px;border-top:1px solid var(--hair);padding-top:4px}
+.kg-list-h{margin:8px 0 2px;font-size:12px;color:var(--silver2)}
+.kg-list-h b{color:var(--amber);font-family:var(--serif);font-weight:400}
+.kg-row{display:flex;gap:10px;align-items:center;padding:9px 0;border-bottom:1px solid var(--hair);font-size:12px}
+.kg-row:last-child{border-bottom:0}
+.kg-d{font-family:var(--mono);font-size:9.5px;color:var(--silver3);flex:none;width:38px}
+.kg-row .chip{flex:none}
+.kg-t{flex:1;min-width:0;color:var(--silver2);line-height:1.6;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
 /* 수집 사례 카드 */
 .caserow{display:flex;gap:10px;align-items:flex-start;padding:11px 0;border-top:1px solid var(--hair);
@@ -1680,22 +1699,43 @@ function renderConstellation(){
     const maxC=g.nodes[0].count, maxW=Math.max(...g.edges.map(e=>e.w),1);
     const dirOf=n=>n.dirs.길>n.dirs.흉?"길":n.dirs.흉>n.dirs.길?"흉":"중립";
     const edges=g.edges.filter(e=>P[e.s]&&P[e.t]).map(e=>
-      `<line class="kg-edge" x1="${P[e.s].x.toFixed(1)}" y1="${P[e.s].y.toFixed(1)}" x2="${P[e.t].x.toFixed(1)}" y2="${P[e.t].y.toFixed(1)}" stroke-width="${(0.6+2.4*e.w/maxW).toFixed(1)}"><title>${esc(cLabel(e.s))} ↔ ${esc(cLabel(e.t))} · 함께 ${e.w}회</title></line>`).join("");
+      `<line class="kg-edge" data-s="${esc(e.s)}" data-t="${esc(e.t)}" x1="${P[e.s].x.toFixed(1)}" y1="${P[e.s].y.toFixed(1)}" x2="${P[e.t].x.toFixed(1)}" y2="${P[e.t].y.toFixed(1)}" stroke-width="${(0.6+2.4*e.w/maxW).toFixed(1)}"><title>${esc(cLabel(e.s))} ↔ ${esc(cLabel(e.t))} · 함께 ${e.w}회</title></line>`).join("");
     const nodes=g.nodes.map(n=>{const p=P[n.id], r=5+9*Math.sqrt(n.count/maxC);
-      return `<g class="kg-node d-${dirOf(n)}" transform="translate(${p.x.toFixed(1)},${p.y.toFixed(1)})">
-        <circle class="kg-halo" r="${(r+5).toFixed(1)}"/><circle class="kg-star" r="${r.toFixed(1)}"/>
+      return `<g class="kg-node d-${dirOf(n)}" data-id="${esc(n.id)}" transform="translate(${p.x.toFixed(1)},${p.y.toFixed(1)})">
+        <g class="kg-inner"><circle class="kg-halo" r="${(r+5).toFixed(1)}"/><circle class="kg-star" r="${r.toFixed(1)}"/></g>
         <text class="kg-label" y="${(r+13).toFixed(1)}">${esc(cLabel(n.id))} ×${n.count}</text>
         <title>${esc(cLabel(n.id))} · ${n.count}회 (길 ${n.dirs.길}·흉 ${n.dirs.흉})</title></g>`;}).join("");
     ov.innerHTML=`<div class="kg-wrap">
       <div class="kg-top"><b>꿈 성좌</b><span class="kg-sub">기록 ${g.records}회 · 상징 ${g.nodes.length} · 연결 ${g.edges.length}</span>
         <button class="kg-btn" id="kg-close">닫기 ✕</button></div>
       <svg class="kg-svg" viewBox="0 0 ${W} ${H}" role="img" aria-label="꿈 상징 공출현 별자리">${edges}${nodes}</svg>
-      <p class="kg-legend">별의 크기 = 그 상징을 꾼 횟수 · 선의 굵기 = 한 꿈에서 함께 나온 횟수 · 색 = 그 상징이 실린 꿈들의 판정 성향. 판정 계산과는 무관한 관찰 뷰입니다.</p></div>`;
+      <p class="kg-legend">별을 누르면 그 상징이 실린 꿈들이 아래 펼쳐져요. 별의 크기 = 꾼 횟수 · 선의 굵기 = 함께 나온 횟수 · 색 = 판정 성향. 판정 계산과는 무관한 관찰 뷰입니다.</p>
+      <div class="kg-list" id="kg-list" hidden></div></div>`;
   }
   ov.hidden=false;
   $("kg-close").onclick=()=>{ov.hidden=true;};
   ov.onclick=e=>{ if(e.target===ov) ov.hidden=true; };
+  ov.querySelectorAll(".kg-node").forEach(nd=>nd.addEventListener("click",()=>{
+    const id=nd.dataset.id, inner=nd.querySelector(".kg-inner");
+    inner.classList.remove("wobble"); void inner.getBBox(); inner.classList.add("wobble");
+    const already=nd.classList.contains("sel");
+    ov.querySelectorAll(".kg-node.sel").forEach(x=>x.classList.remove("sel"));
+    ov.querySelectorAll(".kg-edge.lit").forEach(x=>x.classList.remove("lit"));
+    const list=$("kg-list");
+    if(already){ list.hidden=true; return; }
+    nd.classList.add("sel");
+    ov.querySelectorAll(`.kg-edge[data-s="${CSS.escape(id)}"],.kg-edge[data-t="${CSS.escape(id)}"]`)
+      .forEach(x=>x.classList.add("lit"));
+    const rows=loadJ().filter(r=>entryConcepts(r).includes(id)).slice(0,8);
+    list.innerHTML=`<p class="kg-list-h">✦ <b>${esc(cLabel(id))}</b>${josaKG(cLabel(id))} 나온 꿈 ${rows.length}건</p>`
+      +rows.map(r=>`<div class="kg-row"><span class="kg-d">${dkey(r.ts).slice(5)}</span>
+        <span class="chip dir-${r.verdict.call==="길몽"?"길":r.verdict.call==="흉몽"?"흉":"중립"}">${esc(vlabel(vkey(r.verdict.call)))}</span>
+        <span class="kg-t">${esc(r.text.slice(0,64))}${r.text.length>64?"…":""}</span></div>`).join("");
+    list.hidden=false;
+    list.scrollIntoView({behavior:"smooth",block:"nearest"});
+  }));
 }
+const josaKG=w=>{const c=w.charCodeAt(w.length-1);return (c>=0xAC00&&(c-0xAC00)%28>0)?"이":"가";};
 
 function renderJournal(){
   const a0=loadJ();
