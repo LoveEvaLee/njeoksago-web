@@ -1646,7 +1646,10 @@ const cLabel=id=>{const c=KB.extract_view.find(x=>x.concept_id===id);return c?c.
 function renderInsights(){
   const a=loadJ(), el=$("insight-body"); if(!el)return;
   if(a.length<3){
-    el.innerHTML=`<b>주기 인사이트</b><p>같은 상징이 반복되거나 판정이 몰리면 여기에 정리해 드려요. 기록 3회부터 열립니다. (지금 ${a.length}회)</p>`;
+    el.innerHTML=`<div class="ins-head"><b>주기 인사이트</b>
+      <button class="kg-btn" id="kg-open" title="내 꿈들의 연결을 별자리로">✦ 꿈 성좌</button></div>
+      <p>같은 상징이 반복되거나 판정이 몰리면 여기에 정리해 드려요. 기록 3회부터 열립니다. (지금 ${a.length}회)</p>`;
+    const kg0=$("kg-open"); if(kg0)kg0.onclick=()=>renderConstellation();
     return;
   }
   const cc={}; a.forEach(r=>entryConcepts(r).forEach(id=>cc[id]=(cc[id]||0)+1));
