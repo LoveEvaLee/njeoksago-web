@@ -261,6 +261,30 @@ textarea:focus{outline:1px solid var(--amber);outline-offset:-1px;border-color:t
 .synth-narr b{color:var(--amber)}
 .synth-p{margin:8px 0 0;font-size:13px;line-height:1.95;color:var(--silver)}
 .synth-p b{color:var(--vc,var(--amber))}
+/* 꿈 성좌 (구조 스켈레톤 — 디자인은 Pencil 이식 예정) */
+.ins-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.kg-btn{border:1px solid var(--hair2);background:transparent;color:var(--amber);border-radius:999px;
+  padding:5px 12px;font-family:var(--mono);font-size:10px;letter-spacing:.08em;cursor:pointer}
+.kg-btn:hover{border-color:var(--amber-line);background:var(--amber-soft)}
+#kg-overlay{position:fixed;inset:0;z-index:60;background:#070A12F0;display:flex;align-items:center;justify-content:center;padding:20px}
+.kg-wrap{width:min(800px,100%);max-height:100%;overflow:auto;background:var(--plate);border:1px solid var(--hair2);border-radius:8px;padding:18px 20px}
+.kg-top{display:flex;align-items:center;gap:12px}
+.kg-top b{font-family:var(--serif);font-size:18px;font-weight:400}
+.kg-sub{flex:1;font-family:var(--mono);font-size:9.5px;letter-spacing:.06em;color:var(--silver3)}
+.kg-svg{display:block;width:100%;height:auto;margin-top:12px;background:
+  radial-gradient(1.4px 1.4px at 18% 22%,var(--moon) 50%,transparent 51%),
+  radial-gradient(1px 1px at 72% 12%,var(--silver3) 50%,transparent 51%),
+  radial-gradient(1.2px 1.2px at 85% 68%,var(--moon) 50%,transparent 51%),
+  radial-gradient(1px 1px at 8% 78%,var(--silver3) 50%,transparent 51%),
+  radial-gradient(1.4px 1.4px at 45% 90%,var(--moon) 50%,transparent 51%),var(--void);
+  border:1px solid var(--hair);border-radius:6px}
+.kg-edge{stroke:var(--silver3);opacity:.4;stroke-linecap:round}
+.kg-node .kg-halo{fill:currentColor;opacity:.14}
+.kg-node .kg-star{fill:currentColor;stroke:var(--void);stroke-width:1}
+.kg-node.d-길{color:var(--good)}.kg-node.d-흉{color:var(--bad)}.kg-node.d-중립{color:var(--silver2)}
+.kg-label{fill:var(--silver2);font-family:var(--mono);font-size:9.5px;text-anchor:middle}
+.kg-legend{margin:10px 2px 0;font-size:11px;line-height:1.7;color:var(--silver3)}
+
 /* 수집 사례 카드 */
 .caserow{display:flex;gap:10px;align-items:flex-start;padding:11px 0;border-top:1px solid var(--hair);
   text-decoration:none;color:inherit}
@@ -1574,7 +1598,8 @@ function renderInsights(){
   const now=Date.now(), wk=a.filter(r=>now-r.ts<7*864e5);
   const badAll=a.filter(r=>r.verdict.call==="흉몽").length,
         badWk=wk.filter(r=>r.verdict.call==="흉몽").length;
-  el.innerHTML=`<b>주기 인사이트</b>
+  el.innerHTML=`<div class="ins-head"><b>주기 인사이트</b>
+      <button class="kg-btn" id="kg-open" title="내 꿈들의 연결을 별자리로">✦ 꿈 성좌</button></div>
     ${rep.length?`<p class="ins-h">반복해서 나타난 상징</p><div class="ins-chips">${rep.map(([id,n])=>`<span class="chip ins">${esc(cLabel(id))} ×${n}</span>`).join("")}</div>`
       :`<p class="ins-p">아직 두 번 이상 반복된 상징은 없어요.</p>`}
     ${famTop.length?`<p class="ins-h">자주 등장한 사건 계열</p><div class="ins-chips">${famTop.map(([f,n])=>`<span class="chip ins">${esc(famName(f))} ×${n}</span>`).join("")}</div>`:""}
@@ -1593,6 +1618,83 @@ function renderInsights(){
       $("ins-out").textContent=r.text;
     }catch(e){ $("ins-out").textContent="리포트를 불러오지 못했어요."; b.disabled=false; }
   };
+  const kg=$("kg-open"); if(kg)kg.onclick=()=>renderConstellation();
+}
+
+/* ── 꿈 성좌 (지식그래프) — 기록의 상징 공출현을 별자리로 ──
+   구조 전용 스켈레톤: 데이터 집계·결정적 배치·SVG 클래스(.kg-*)까지.
+   시각 디자인은 Pencil 캔버스가 소유(성좌 프레임 이식 예정). */
+function kgHash(s){let h=2166136261;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619);}return (h>>>0)/4294967295;}
+function buildDreamGraph(){
+  const a=loadJ();
+  const nodes={}, edges={};
+  for(const r of a){
+    const ids=[...new Set(entryConcepts(r))];
+    for(const id of ids){
+      const n=nodes[id]||(nodes[id]={id,count:0,dirs:{길:0,흉:0,중립:0}});
+      n.count++;
+      const v=r.verdict?.call||"";
+      if(v==="길몽")n.dirs.길++; else if(v==="흉몽")n.dirs.흉++; else n.dirs.중립++;
+    }
+    for(let i=0;i<ids.length;i++)for(let j=i+1;j<ids.length;j++){
+      const k=[ids[i],ids[j]].sort().join("|");
+      edges[k]=(edges[k]||0)+1;
+    }
+  }
+  return {records:a.length,
+    nodes:Object.values(nodes).sort((x,y)=>y.count-x.count).slice(0,24),
+    edges:Object.entries(edges).map(([k,w])=>{const [s,t]=k.split("|");return {s,t,w};})
+      .sort((x,y)=>y.w-x.w).slice(0,40)};
+}
+function kgLayout(g,W,H){
+  // 결정적 force 배치: id 해시 초기 위치 → 반발+간선 인력+중심 중력 120회
+  const P={}; const ids=g.nodes.map(n=>n.id); const idx=Object.fromEntries(ids.map((d,i)=>[d,i]));
+  g.nodes.forEach(n=>{const a=kgHash(n.id)*Math.PI*2, r=(0.22+0.28*kgHash(n.id+"r"))*Math.min(W,H);
+    P[n.id]={x:W/2+Math.cos(a)*r, y:H/2+Math.sin(a)*r};});
+  const E=g.edges.filter(e=>idx[e.s]!==undefined&&idx[e.t]!==undefined);
+  for(let it=0;it<120;it++){
+    for(const a1 of ids)for(const b1 of ids){ if(a1>=b1)continue;
+      const A=P[a1],B=P[b1]; let dx=A.x-B.x,dy=A.y-B.y; let d2=dx*dx+dy*dy||1; const d=Math.sqrt(d2);
+      const rep=2200/d2; dx/=d; dy/=d;
+      A.x+=dx*rep; A.y+=dy*rep; B.x-=dx*rep; B.y-=dy*rep; }
+    for(const e of E){ const A=P[e.s],B=P[e.t];
+      let dx=B.x-A.x,dy=B.y-A.y; const d=Math.sqrt(dx*dx+dy*dy)||1;
+      const pull=0.004*Math.min(e.w,4)*(d-90); dx/=d; dy/=d;
+      A.x+=dx*pull; A.y+=dy*pull; B.x-=dx*pull; B.y-=dy*pull; }
+    for(const n1 of ids){ const A=P[n1];
+      A.x+=(W/2-A.x)*0.012; A.y+=(H/2-A.y)*0.012;
+      A.x=Math.max(46,Math.min(W-46,A.x)); A.y=Math.max(40,Math.min(H-40,A.y)); }
+  }
+  return P;
+}
+function renderConstellation(){
+  let ov=$("kg-overlay");
+  if(!ov){ ov=document.createElement("div"); ov.id="kg-overlay"; document.body.appendChild(ov); }
+  const g=buildDreamGraph();
+  if(g.nodes.length<2){
+    ov.innerHTML=`<div class="kg-wrap"><div class="kg-top"><b>꿈 성좌</b><button class="kg-btn" id="kg-close">닫기 ✕</button></div>
+      <p class="hint" style="padding:30px 0">상징이 2개 이상 기록되면 별자리를 그릴 수 있어요. (지금 기록 ${g.records}회)</p></div>`;
+  }else{
+    const W=Math.min(innerWidth-40,760), H=Math.min(innerHeight-160,540);
+    const P=kgLayout(g,W,H);
+    const maxC=g.nodes[0].count, maxW=Math.max(...g.edges.map(e=>e.w),1);
+    const dirOf=n=>n.dirs.길>n.dirs.흉?"길":n.dirs.흉>n.dirs.길?"흉":"중립";
+    const edges=g.edges.filter(e=>P[e.s]&&P[e.t]).map(e=>
+      `<line class="kg-edge" x1="${P[e.s].x.toFixed(1)}" y1="${P[e.s].y.toFixed(1)}" x2="${P[e.t].x.toFixed(1)}" y2="${P[e.t].y.toFixed(1)}" stroke-width="${(0.6+2.4*e.w/maxW).toFixed(1)}"><title>${esc(cLabel(e.s))} ↔ ${esc(cLabel(e.t))} · 함께 ${e.w}회</title></line>`).join("");
+    const nodes=g.nodes.map(n=>{const p=P[n.id], r=5+9*Math.sqrt(n.count/maxC);
+      return `<g class="kg-node d-${dirOf(n)}" transform="translate(${p.x.toFixed(1)},${p.y.toFixed(1)})">
+        <circle class="kg-halo" r="${(r+5).toFixed(1)}"/><circle class="kg-star" r="${r.toFixed(1)}"/>
+        <text class="kg-label" y="${(r+13).toFixed(1)}">${esc(cLabel(n.id))} ×${n.count}</text>
+        <title>${esc(cLabel(n.id))} · ${n.count}회 (길 ${n.dirs.길}·흉 ${n.dirs.흉})</title></g>`;}).join("");
+    ov.innerHTML=`<div class="kg-wrap">
+      <div class="kg-top"><b>꿈 성좌</b><span class="kg-sub">기록 ${g.records}회 · 상징 ${g.nodes.length} · 연결 ${g.edges.length}</span>
+        <button class="kg-btn" id="kg-close">닫기 ✕</button></div>
+      <svg class="kg-svg" viewBox="0 0 ${W} ${H}" role="img" aria-label="꿈 상징 공출현 별자리">${edges}${nodes}</svg>
+      <p class="kg-legend">별의 크기 = 그 상징을 꾼 횟수 · 선의 굵기 = 한 꿈에서 함께 나온 횟수 · 색 = 그 상징이 실린 꿈들의 판정 성향. 판정 계산과는 무관한 관찰 뷰입니다.</p></div>`;
+  }
+  ov.hidden=false;
+  $("kg-close").onclick=()=>{ov.hidden=true;};
+  ov.onclick=e=>{ if(e.target===ov) ov.hidden=true; };
 }
 
 function renderJournal(){
