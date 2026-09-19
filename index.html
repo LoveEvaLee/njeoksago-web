@@ -286,46 +286,31 @@ textarea:focus{outline:1px solid var(--amber);outline-offset:-1px;border-color:t
   font-size:13px;line-height:1;cursor:pointer}
 #kg-close:hover{border-color:var(--amber);color:var(--amber);background:transparent}
 .kg-sky{padding:14px 14px 0}
-.kg-svg{display:block;width:100%;height:auto;border:1px solid var(--hair);border-radius:4px;
-  background:
-    radial-gradient(68% 56% at 20% 24%,rgba(92,106,196,.18),transparent 72%),
-    radial-gradient(60% 52% at 80% 74%,rgba(158,116,200,.14),transparent 72%),
-    radial-gradient(90% 70% at 50% 50%,rgba(12,18,38,0),rgba(4,6,14,.55) 100%),
-    linear-gradient(180deg,#0A1020 0%,#070B16 60%,#05080F 100%)}
+.kg-svg{display:block;width:100%;height:auto;background:#080C18;border:1px solid var(--hair);border-radius:4px}
 .kg-node{cursor:pointer}
-.kg-node .kg-bloom{opacity:.28;filter:url(#kgBloom);pointer-events:none}
-.kg-node .kg-halo{fill:currentColor;opacity:.16}
-.kg-node .kg-star{stroke:none}
-.kg-node .kg-spec{fill:#FFFFFF;opacity:.55;pointer-events:none}
-.kg-node .kg-ring{fill:none;stroke:var(--amber);stroke-width:1.3;opacity:0;transition:opacity .25s}
+.kg-node .kg-halo{fill:currentColor}
+.kg-node .kg-star{fill:currentColor;stroke:none}
+.kg-node .kg-ring{fill:none;stroke:var(--amber);stroke-width:1.3;opacity:0;transition:opacity .2s}
 .kg-node.d-길{color:var(--good)}.kg-node.d-흉{color:var(--bad)}.kg-node.d-중립{color:var(--silver2)}
-.kg-label{fill:var(--silver2);font-family:var(--mono);font-size:9px;letter-spacing:.04em;text-anchor:middle;
+.kg-label{fill:var(--silver3);font-family:var(--mono);font-size:9px;letter-spacing:.04em;text-anchor:middle;
   paint-order:stroke;stroke:#080C18;stroke-width:2.5px;stroke-linejoin:round}
-.kg-node .kg-bloom,.kg-node .kg-halo,.kg-node .kg-label{transition:opacity .25s,fill .25s}
-.kg-node:hover .kg-bloom{opacity:.5}
-.kg-node:hover .kg-halo{opacity:.26}
-.kg-node:hover .kg-label{fill:var(--silver)}
-.kg-node.sel .kg-bloom{opacity:.62}
-.kg-node.sel .kg-halo{opacity:.3}
-.kg-node.sel .kg-ring{opacity:1;animation:kg-pulse 2.6s ease-in-out infinite}
+.kg-node .kg-halo,.kg-node .kg-label{transition:opacity .2s,fill .2s}
+.kg-node:hover .kg-halo{opacity:.22!important}
+.kg-node:hover .kg-label{fill:var(--silver2)}
+.kg-node.sel .kg-halo{fill:var(--amber);opacity:.22!important}
+.kg-node.sel .kg-star{fill:var(--silver)}
+.kg-node.sel .kg-ring{opacity:1}
 .kg-node.sel .kg-label{fill:var(--amber)}
-@keyframes kg-pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.55;transform:scale(1.07)}}
-.kg-node.sel .kg-ring{transform-box:fill-box;transform-origin:center}
-.kg-dust{fill:var(--moon);animation:kg-twinkle 6.5s ease-in-out infinite}
-@keyframes kg-twinkle{0%,100%{opacity:.25}50%{opacity:.85}}
+.kg-dust{fill:var(--moon)}
 .kg-dusts{pointer-events:none}
 .kg-inner{transform-box:fill-box;transform-origin:center}
 @keyframes kg-wobble{0%{transform:rotate(0) translate(0,0)}18%{transform:translate(2.5px,-2px) rotate(4deg)}
   38%{transform:translate(-2px,1.5px) rotate(-3deg)}58%{transform:translate(1.2px,-1px) rotate(2deg)}
   78%{transform:translate(-.6px,.5px) rotate(-1deg)}100%{transform:translate(0,0) rotate(0)}}
 .kg-inner.wobble{animation:kg-wobble .55s ease-out}
-@media (prefers-reduced-motion:reduce){
-  .kg-inner.wobble,.kg-dust,.kg-node.sel .kg-ring{animation:none}
-}
-.kg-edge{stroke:#A7B0DE;opacity:.42;stroke-linecap:round;filter:url(#kgSoft);
-  transition:opacity .3s,stroke .3s,stroke-width .3s}
-.kg-edge.lit{stroke:var(--amber);opacity:.9;filter:none}
-@media (max-width:999px){.kg-node .kg-bloom{opacity:.24}}
+@media (prefers-reduced-motion:reduce){.kg-inner.wobble{animation:none}}
+.kg-edge{stroke:var(--silver2);opacity:.4;stroke-linecap:round;transition:opacity .25s,stroke .25s}
+.kg-edge.lit{stroke:var(--amber);opacity:.85}
 .kg-legend{display:flex;gap:9px;align-items:flex-start;margin:0;
   padding:13px 18px 15px;font-size:10px;line-height:1.75;color:var(--silver3)}
 .kg-legend::before{content:"";flex:none;width:11px;height:11px;margin-top:3px;background:currentColor;
@@ -1781,57 +1766,38 @@ function renderConstellation(){
     const P=kgLayout(g,W,H);
     const maxC=g.nodes[0].count, maxW=Math.max(...g.edges.map(e=>e.w),1);
     const dirOf=n=>n.dirs.길>n.dirs.흉?"길":n.dirs.흉>n.dirs.길?"흉":"중립";
-    /* 판정 성향을 연속값으로 → 코랄 ↔ 은보라 ↔ 초록 사이를 섞고, 상징별 미세 색조를 더한다 */
+    /* 캔버스 A06 그대로: 평면 원 + 헤일로 하나. 상징별 색조만 아주 약하게(≤6%) 흔든다 */
     const HX=h=>[1,3,5].map(i=>parseInt(h.slice(i,i+2),16));
-    const RGB=a=>"#"+a.map(v=>Math.max(0,Math.min(255,Math.round(v))).toString(16).padStart(2,"0")).join("");
-    const mix=(a,b,t)=>{const A=HX(a),B=HX(b);return RGB(A.map((v,i)=>v+(B[i]-v)*t));};
-    const NEU="#AEB6E0", GOOD="#7FC9A8", BAD="#E08A86";
+    const RGB=a2=>"#"+a2.map(v=>Math.max(0,Math.min(255,Math.round(v))).toString(16).padStart(2,"0")).join("");
+    const mix=(a2,b2,t)=>{const A=HX(a2),B=HX(b2);return RGB(A.map((v,k)=>v+(B[k]-v)*t));};
+    const A06={"길":"#7FC9A8","흉":"#DE8C85","중립":"#A9B1C6"};
+    const HALO={"길":.14,"흉":.14,"중립":.12};
     const starColor=n=>{
-      const g1=n.dirs.길,b1=n.dirs.흉,z1=n.dirs.중립,tot=g1+b1+z1||1;
-      const t=(g1-b1)/tot;
-      let c=t>=0?mix(NEU,GOOD,Math.min(1,t*1.3)):mix(NEU,BAD,Math.min(1,-t*1.3));
-      const h=kgHash(n.id+"tint");
-      return mix(c,h>0.5?"#C7B4EC":"#9BC6EE",0.08+0.14*h);   // 상징마다 미묘하게 다른 색조
+      const base=A06[dirOf(n)], h=kgHash(n.id+"tint");
+      return mix(base,h>0.5?"#C7B4EC":"#9BC6EE",0.03+0.03*h);
     };
-    /* 배경 별먼지 — 결정적 난수, 느리게 반짝임 */
-    const bgN=Math.round((W*H)/4200);
+    /* 배경 별 — A06처럼 드문드문, 정적 */
     let bg="", sd=20260919>>>0;
     const rnd=()=>{sd=(Math.imul(sd,1664525)+1013904223)>>>0; return sd/4294967296;};
-    for(let i=0;i<bgN;i++){
+    const bgN=Math.max(7,Math.round((W*H)/16000));
+    for(let i2=0;i2<bgN;i2++){
       const hx=rnd(), hy=rnd(), hr=rnd();
-      const rr=(0.45+hr*1.35).toFixed(2), op=(0.16+hr*0.52).toFixed(2), dl=(rnd()*7).toFixed(2);
-      bg+=`<circle class="kg-dust" cx="${(hx*W).toFixed(1)}" cy="${(hy*H).toFixed(1)}" r="${rr}" opacity="${op}" style="animation-delay:${dl}s"/>`;
+      bg+=`<circle class="kg-dust" cx="${(hx*W).toFixed(1)}" cy="${(hy*H).toFixed(1)}" r="${(0.5+hr*0.7).toFixed(2)}" opacity="${(0.3+hr*0.25).toFixed(2)}"/>`;
     }
     const edges=g.edges.filter(e=>P[e.s]&&P[e.t]).map(e=>
-      `<line class="kg-edge" data-s="${esc(e.s)}" data-t="${esc(e.t)}" x1="${P[e.s].x.toFixed(1)}" y1="${P[e.s].y.toFixed(1)}" x2="${P[e.t].x.toFixed(1)}" y2="${P[e.t].y.toFixed(1)}" stroke-width="${(0.6+2.6*e.w/maxW).toFixed(1)}"><title>${esc(cLabel(e.s))} ↔ ${esc(cLabel(e.t))} · 함께 ${e.w}회</title></line>`).join("");
-    let defs=`<defs>
-      <filter id="kgBloom" x="-140%" y="-140%" width="380%" height="380%">
-        <feGaussianBlur stdDeviation="5" result="b"/>
-        <feMerge><feMergeNode in="b"/><feMergeNode in="b"/></feMerge></filter>
-      <filter id="kgSoft" x="-60%" y="-60%" width="220%" height="220%">
-        <feGaussianBlur stdDeviation="1.1"/></filter>
-      <radialGradient id="kgNeb1" cx="50%" cy="50%"><stop offset="0" stop-color="#6E7BD6" stop-opacity=".20"/><stop offset="1" stop-color="#6E7BD6" stop-opacity="0"/></radialGradient>
-      <radialGradient id="kgNeb2" cx="50%" cy="50%"><stop offset="0" stop-color="#A47BD1" stop-opacity=".15"/><stop offset="1" stop-color="#A47BD1" stop-opacity="0"/></radialGradient>`;
-    const nodes=g.nodes.map((n,i)=>{
-      const p=P[n.id], r=4.5+10.5*Math.sqrt(n.count/maxC);
-      const col=starColor(n), lit=mix(col,"#FFFFFF",0.55);
-      defs+=`<radialGradient id="kgS${i}" cx="38%" cy="34%" r="72%">
-        <stop offset="0" stop-color="#FFFFFF" stop-opacity=".95"/>
-        <stop offset=".38" stop-color="${lit}"/>
-        <stop offset="1" stop-color="${col}"/></radialGradient>`;
-      return `<g class="kg-node d-${dirOf(n)}" data-id="${esc(n.id)}" style="color:${col}" transform="translate(${p.x.toFixed(1)},${p.y.toFixed(1)})">
+      `<line class="kg-edge" data-s="${esc(e.s)}" data-t="${esc(e.t)}" x1="${P[e.s].x.toFixed(1)}" y1="${P[e.s].y.toFixed(1)}" x2="${P[e.t].x.toFixed(1)}" y2="${P[e.t].y.toFixed(1)}" stroke-width="${(0.9+1.5*e.w/maxW).toFixed(1)}"><title>${esc(cLabel(e.s))} ↔ ${esc(cLabel(e.t))} · 함께 ${e.w}회</title></line>`).join("");
+    const nodes=g.nodes.map(n=>{
+      const p=P[n.id], r=5+7*Math.sqrt(n.count/maxC);
+      const col=starColor(n), d=dirOf(n);
+      return `<g class="kg-node d-${d}" data-id="${esc(n.id)}" style="color:${col}" transform="translate(${p.x.toFixed(1)},${p.y.toFixed(1)})">
         <g class="kg-inner">
-          <circle class="kg-bloom" r="${(r*2.9).toFixed(1)}" fill="${col}"/>
-          <circle class="kg-halo" r="${(r*1.75).toFixed(1)}"/>
-          <circle class="kg-ring" r="${(r+7).toFixed(1)}"/>
-          <circle class="kg-star" r="${r.toFixed(1)}" fill="url(#kgS${i})"/>
-          <circle class="kg-spec" cx="${(-r*0.28).toFixed(1)}" cy="${(-r*0.34).toFixed(1)}" r="${(r*0.24).toFixed(1)}"/>
+          <circle class="kg-halo" r="${(r*2.0).toFixed(1)}" opacity="${HALO[d]}"/>
+          <circle class="kg-ring" r="${(r+6).toFixed(1)}"/>
+          <circle class="kg-star" r="${r.toFixed(1)}"/>
         </g>
-        <text class="kg-label" y="${(r+14).toFixed(1)}">${esc(cLabel(n.id))} ×${n.count}</text>
+        <text class="kg-label" y="${(r+13).toFixed(1)}">${esc(cLabel(n.id))} ×${n.count}</text>
         <title>${esc(cLabel(n.id))} · ${n.count}회 (길 ${n.dirs.길}·흉 ${n.dirs.흉})</title></g>`;}).join("");
-    defs+=`</defs>`;
-    const neb=`<ellipse cx="${(W*0.26).toFixed(0)}" cy="${(H*0.3).toFixed(0)}" rx="${(W*0.42).toFixed(0)}" ry="${(H*0.46).toFixed(0)}" fill="url(#kgNeb1)"/>
-      <ellipse cx="${(W*0.76).toFixed(0)}" cy="${(H*0.7).toFixed(0)}" rx="${(W*0.38).toFixed(0)}" ry="${(H*0.44).toFixed(0)}" fill="url(#kgNeb2)"/>`;
+    const defs="", neb="";
     ov.innerHTML=`<div class="kg-wrap">
       <div class="kg-top"><div class="kg-ttl"><b>꿈 성좌</b>
         <span class="kg-sub">기록 ${g.records}회 · 상징 ${g.nodes.length}${totalSym>g.nodes.length?" / "+totalSym+" (자주 나온 순)":""} · 연결 ${g.edges.length}</span></div>
