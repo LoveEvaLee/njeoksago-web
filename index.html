@@ -742,11 +742,6 @@ details.acc[open]>summary .cv{transform:rotate(180deg)}
             <button class="btn ghost mono" id="jclear"><svg class="i"><use href="#i-trash"/></svg>CLEAR</button>
           </div>
         </div>
-        <div class="dist">
-          <div class="bbar" id="jdist-bar-m"></div>
-          <div class="dleg" id="jdist-leg-m"></div>
-        </div>
-        <div class="jlist" id="jlist"></div>
         <div class="slot" id="insight-slot">
           <div class="dialmini"><svg viewBox="0 0 200 200" aria-hidden="true"><use href="#s-dial"/></svg></div>
           <div id="insight-body" style="flex:1">
@@ -754,6 +749,11 @@ details.acc[open]>summary .cv{transform:rotate(180deg)}
             <p>같은 상징이 반복되거나 판정이 한쪽으로 몰리면 여기에 정리해 드려요. 기록 3회부터 열립니다.</p>
           </div>
         </div>
+        <div class="dist">
+          <div class="bbar" id="jdist-bar-m"></div>
+          <div class="dleg" id="jdist-leg-m"></div>
+        </div>
+        <div class="jlist" id="jlist"></div>
       </div>
     </div>
   </main>
@@ -1586,7 +1586,10 @@ function renderInsights(){
     b.disabled=true; $("ins-out").textContent="기록을 살펴보는 중…";
     try{
       const recent=a.slice(0,10).map(r=>({d:dkey(r.ts).slice(5),v:r.verdict.call,상징:entryConcepts(r).slice(0,4).map(cLabel)}));
-      const r=await sample(`꿈일지 기록의 패턴을 3~4문장으로 '관찰'만 하세요. 규칙: 미래 예측·원인 단정 금지, "~한 경향이 보여요", "~와 연결해 볼 수도 있어요" 화법, 이미 내려진 판정의 재해석 금지, 차분한 존댓말, 과장·공포 조장 금지.\n기록(최신순): ${JSON.stringify(recent)}`);
+      const r=await sample(`당신은 꿈일지를 함께 봐주는 다정한 상담가입니다. 두 부분으로 답하세요.
+[1] 기록 패턴 관찰 3~4문장 — 반복 상징·시기별 흐름을 짚되, 미래 예측·원인 단정 금지, "~한 경향이 보여요" 화법, 이미 내려진 판정의 재해석 금지.
+[2] 마지막에 공감의 한 단락 2~3문장 — 사주·타로 상담사가 내담자를 다독이듯: 긴장·갈등 상징이 몰린 시기라면 "요즘 마음 쓰이는 일이 많으신가 봐요"처럼 헤아려주고, 순한 꿈이 이어지는 흐름이면 함께 반가워해 주세요. 단 "곧 좋은 일이 생긴다/나쁜 일이 온다" 같은 미래 단정과 불안 조장은 금지 — 위로는 지금의 마음에 대해서만.
+차분한 존댓말, 과장 금지.\n기록(최신순): ${JSON.stringify(recent)}`);
       $("ins-out").textContent=r.text;
     }catch(e){ $("ins-out").textContent="리포트를 불러오지 못했어요."; b.disabled=false; }
   };
