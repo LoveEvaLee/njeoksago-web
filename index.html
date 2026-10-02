@@ -1012,7 +1012,8 @@ function liteExtract(text){
 function liteFacts(t,c){
   const f={};
   if(c.facts.includes("action")){
-    if(/놓쳤|놓치|도망가/.test(t))f.action="놓침";
+    if(/사귀|재회|다시 만나/.test(t))f.action="만남";
+    else if(/놓쳤|놓치|도망가/.test(t))f.action="놓침";
     else if(/잡았|잡혔|잡히|낚/.test(t))f.action="잡음";
     else if(/잃어|없어졌|도둑맞/.test(t))f.action="잃음";
     else if(/주웠|주었|받았/.test(t))f.action="줍음";
@@ -1081,7 +1082,9 @@ function runEngine(ex){
   // 보수 가드는 family 병합 '전' 매칭 수 기준 — 병합은 점수 인플레 방지용이지 근거 개수 부정이 아님
   const bEff=matches.filter(m=>m.rule.direction!=="중립"&&m.score>=0.25&&m.match>=0.5).length;
   const aExact=matches.some(m=>m.rule.grade==="A"&&!m.rule.provisional&&m.match===1);
-  const guard=aExact||bEff>=2;
+  // score-v2.1 (2026-10-02 유경 승인): 완전일치(exact) 방향성 근거 1개면 확정 허용 — 부분일치만으론 여전히 유보
+  const fullExact=matches.filter(m=>m.rule.direction!=="중립"&&m.match===1&&m.score>=0.25).length;
+  const guard=aExact||bEff>=2||fullExact>=1;
   let call,reason,balance=0;
   if(total<=T.total_min){call="판정유보";reason="근거 부족";}
   else if(directional===0){call="중립";reason="방향성 없는 근거";}
