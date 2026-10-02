@@ -1223,6 +1223,19 @@ function renderDict(hits,raw){
         <p class="dh-alias">${(c.aliases||[]).slice(0,6).map(a=>esc(a)).join(" · ")}</p>
         ${rules.length?`<div class="dh-cnt">${nG?`<span class="chip dir-길">길 ${nG}</span>`:""}${nB?`<span class="chip dir-흉">흉 ${nB}</span>`:""}${nZ?`<span class="chip dir-중립">중립 ${nZ}</span>`:""}<span class="chip grade">규칙 ${rules.length}</span></div>`:""}
       </div>
+      ${rules.length?(()=>{/* 사전 종합 문단 — 결정적 조립, 판정 아님 (2026-10-02) */
+        const conds=rules.filter(r=>Object.keys(r.condition||{}).length);
+        const pick=d2=>conds.filter(r=>r.direction===d2).sort((a,b)=>Object.keys(a.condition).length-Object.keys(b.condition).length)[0];
+        const g=pick("길"),b=pick("흉");
+        let base = nG&&nB ? "전통 자료는 이 상징을 한쪽으로 못 박지 않아요 — <b>꿈의 전개에 따라 갈려요</b>."
+          : nG ? "전통 자료는 이 상징을 대체로 <b>좋은 쪽</b>으로 읽어요."
+          : nB ? "전통 자료는 이 상징을 대체로 <b>조심하라는 쪽</b>으로 읽어요."
+          : "전통 자료는 이 상징을 길흉보다 상징의 뜻으로 읽어요.";
+        const parts=[];
+        if(g)parts.push(`<b>${esc(condLabel(g.condition))}</b> 쪽 전개는 좋은 신호`);
+        if(b)parts.push(`<b>${esc(condLabel(b.condition))}</b> 쪽 전개는 조심 신호`);
+        return `<div class="panel synth" style="margin:10px 0 4px"><div class="panel-h">${ICON("book")}<span class="sec">대체로 이렇게 읽혀요</span></div>
+          <p class="synth-p" style="font-size:12.5px">${base}${parts.length?" "+parts.join(", ")+"예요 — 자세한 풀이는 아래 목록에 있어요.":""} 실제 꿈이 어떻게 흘러갔는지 문장으로 적어주시면 조건을 맞춰 판정까지 계산해 드려요.</p></div>`;})():""}
       ${chips}
       ${rules.length?`<div class="dictlist">${rows}</div>`:empty}
     </div>`;
@@ -1239,7 +1252,10 @@ function renderDict(hits,raw){
     </div>
   </div>`;
   $("dict-back").onclick=()=>show("v-input");
-  $("dict-narr").onclick=()=>{show("v-input");$("dream").focus();};
+  $("dict-narr").onclick=()=>{show("v-input");
+    const first=hits[0]&&(hits[0].surf||hits[0].c.aliases[0])||"";
+    if(first&&!$("dream").value.trim())$("dream").value=first+" 꿈을 꿨는데, ";
+    $("dream").focus();};
   $("v-dict").querySelectorAll(".dict-chips").forEach(bar=>{
     bar.querySelectorAll(".fchip").forEach(b=>b.onclick=()=>{
       bar.querySelectorAll(".fchip").forEach(x=>x.classList.toggle("on",x===b));
