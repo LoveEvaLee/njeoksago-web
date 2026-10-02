@@ -894,7 +894,7 @@ const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&g
 
 /* ── 초기화 ─────────────────────────────── */
 (async function init(){
-  try{ KB=await (await fetch("kb.json")).json(); $("kbv").textContent=KB.kb_version; }
+  try{ KB=await (await fetch("kb.json",{cache:"no-cache"})).json(); $("kbv").textContent=KB.kb_version; }
   catch(e){ $("engine-status").textContent="KB 로드 실패 — 새로고침 해주세요"; return; }
   $("engine-status").textContent="분석 엔진 연결 중… (그동안에도 입력 가능)";
   sample=await window.claude?.use?.("sample").catch(()=>null) ?? null;
@@ -1012,7 +1012,7 @@ function liteExtract(text){
 function liteFacts(t,c){
   const f={};
   if(c.facts.includes("action")){
-    if(/사귀|재회|다시 만나/.test(t))f.action="만남";
+    if(/사귀|재회|만나/.test(t))f.action="만남";
     else if(/놓쳤|놓치|도망가/.test(t))f.action="놓침";
     else if(/잡았|잡혔|잡히|낚/.test(t))f.action="잡음";
     else if(/잃어|없어졌|도둑맞/.test(t))f.action="잃음";
@@ -1391,7 +1391,7 @@ const VSUB={길몽:"전통 자료가 순한 쪽으로 모인 꿈입니다.",흉�
 let CASES=null;
 async function loadCases(){
   if(CASES!==null)return CASES;
-  try{ CASES=(await (await fetch("cases.json")).json()).items||[]; }catch(e){ CASES=[]; }
+  try{ CASES=(await (await fetch("cases.json",{cache:"no-cache"})).json()).items||[]; }catch(e){ CASES=[]; }
   return CASES;
 }
 function gapKeywords(){
