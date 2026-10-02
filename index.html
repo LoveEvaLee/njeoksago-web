@@ -393,13 +393,26 @@ details.acc>summary .l .i{width:13px;height:13px;color:var(--amber)}
 details.acc>summary .cv{width:14px;height:14px;color:var(--silver3);transition:transform .2s}
 details.acc[open]>summary .cv{transform:rotate(180deg)}
 .evbody{padding:0 16px 8px}
-.evrow{display:flex;gap:11px;align-items:center;padding:12px 0;border-top:1px solid var(--hair);font-size:12px;line-height:1.65}
-.evrow .cl{flex:1;color:var(--silver)}
+/* EVIDENCE LOG 행 (모바일 — Pencil A03) */
+.evrow{display:flex;gap:12px;align-items:flex-start;padding:11px 0 12px;border-top:1px solid var(--hair);font-size:12px;line-height:1.65}
+.evrow .ev-l{display:flex;flex-direction:column;gap:6px;flex:none;width:118px;align-items:flex-start}
+.evrow .ev-l .scale{width:100%}
+.evrow .ev-id{font-family:var(--mono);font-size:9.5px;letter-spacing:.06em;color:var(--amber)}
+.evrow .ev-r{flex:1;min-width:0;display:flex;flex-direction:column;gap:5px}
+.evrow .cl{color:var(--silver)}
+.evrow .ev-src{font-family:var(--mono);font-size:9px;letter-spacing:.03em;color:var(--silver3)}
 .evrow .gr{font-family:var(--mono);font-size:9.5px;color:var(--silver3);white-space:nowrap}
+.panel.evlog .bhead b.amber{color:var(--amber)}
+.mono-tag{font-family:var(--mono);font-size:9px;letter-spacing:.05em;color:var(--silver3);white-space:nowrap}
+.obsave{display:flex;gap:10px;align-items:center;margin-top:14px;padding:12px 14px;border:1px solid var(--hair);border-radius:4px;font-size:11px;line-height:1.6;color:var(--silver3)}
+.obsave .i{width:13px;height:13px;color:var(--good);flex:none}
 .explain-note{font-family:var(--mono);font-size:9px;letter-spacing:.04em;color:var(--silver3);text-align:center;margin-top:9px}
 .expl{font-size:13px;line-height:1.9;white-space:pre-wrap;margin-top:14px;color:var(--silver2)}
 .resfoot{display:flex;flex-direction:column;gap:10px;margin-top:14px}
-.explain-row{display:none}
+/* 모바일에도 해설 CTA 노출 (Pencil A03) — 데스크톱은 아래 미디어쿼리가 row로 재배치 */
+.explain-row{display:flex;flex-direction:column;gap:12px;border:1px solid var(--amber-line);border-radius:6px;padding:16px;margin-top:14px}
+.explain-row .er-t b{display:block;font-size:13.5px;color:var(--silver)}
+.explain-row .er-t p{margin:5px 0 0;font-size:11px;color:var(--silver3);line-height:1.7}
 
 /* ── 캘린더 ── */
 .calnavs{display:flex;align-items:center;gap:10px}
@@ -550,9 +563,11 @@ details.acc[open]>summary .cv{transform:rotate(180deg)}
   .vsub{font-size:13px;max-width:320px}
   .panel{margin-top:0;padding:16px 18px}
   details.acc{display:none}
+  .panel.evlog{display:none}
   .res-head{display:block;margin:0 0 16px}
   .evtable{display:block;border:1px solid var(--hair);border-radius:6px;overflow:hidden;background:var(--plate)}
-  .evtable .hr-row,.evtable .tr{display:grid;grid-template-columns:96px 44px 118px minmax(0,1fr) 124px;align-items:center}
+  .evtable .hr-row,.evtable .tr{display:grid;grid-template-columns:96px 40px 40px 112px minmax(0,1fr) 124px;align-items:center}
+  .evtable .tr .grc{font-family:var(--mono);font-size:10.5px;color:var(--silver2);padding:15px 14px}
   .evtable .hr-row{background:rgba(13,19,34,.7)}
   :root[data-theme=light] .evtable .hr-row{background:var(--void2)}
   .evtable .hr-row div{padding:11px 11px;font-family:var(--mono);font-size:8.5px;font-weight:400;letter-spacing:.14em;color:var(--silver3)}
@@ -566,7 +581,7 @@ details.acc[open]>summary .cv{transform:rotate(180deg)}
   .evtable .tr .gradecell span{white-space:nowrap}
   .evtable .tr .dirc{white-space:nowrap}
   .evtable .tr .dirc{font-family:var(--mono);font-size:10.5px;font-weight:700}
-  .explain-row{display:flex;align-items:center;justify-content:space-between;gap:24px;
+  .explain-row{flex-direction:row;align-items:center;justify-content:space-between;gap:24px;
     border:1px solid var(--amber-line);border-radius:6px;padding:20px 24px;margin-top:16px}
   .explain-row b{display:block;font-size:14px;color:var(--silver)}
   .explain-row p{margin:6px 0 0;font-size:11.5px;color:var(--silver3)}
@@ -1425,8 +1440,8 @@ function finish(){
   const nB=famCount("흉"),nZ=famCount("중립"),nG=famCount("길");
   const seg=(d,c)=>c?`<i class="d-${d}" style="flex:${c}"></i>`:"";
   const bar=`<div class="bbar">${seg("흉",nB)}${seg("중립",nZ)}${seg("길",nG)}</div>`;
-  const legend=`<div class="blegend">${[["흉",nB],["중립",nZ],["길",nG]].filter(x=>x[1])
-    .map(x=>`<span><i class="d-${x[0]}"></i>${x[0]} ${x[1]}계열</span>`).join("")}</div>`;
+  const legend=`<span>${[["흉",nB],["중립",nZ],["길",nG]].filter(x=>x[1])
+    .map(x=>`${x[0]} ${x[1]}`).join(" · ")}</span>`;
   /* BALANCE 양극 눈금 — −1(흉) ~ +1(길) */
   const bdir=e.balance>0.05?"길":e.balance<-0.05?"흉":"중립";
   const balScale=`<div class="scale wide dir-${bdir}" style="--v:${((e.balance+1)/2).toFixed(3)}">
@@ -1435,17 +1450,20 @@ function finish(){
   const rows=e.evidence.map(x=>({d:x.rule.direction,g:x.rule.grade,p:!!x.rule.provisional,
     cl:x.rule.claim,ref:x.rule.ref||"출처 미기재",m:x.match,
     rid:x.rule.rule_id,lin:x.rule.lineage,v:Math.max(0,Math.min(1,x.score/maxW()))}));
+  /* 출처 축약 — B·비잠정 = 두 계보 합의(승격 규약), 그 외 계보 한 줄 */
+  const srcShort=r=>esc(lineageShort(r.lin).split("『")[0].split("—")[0].trim().slice(0,16)||"출처 미기재")+(r.g==="B"&&!r.p?" · 2계보 합의":"");
   const evList=rows.map(r=>`<div class="evrow">
-      <span class="chip dir-${r.d}">${r.d}</span>
-      <span class="cl">${esc(r.cl)}</span>
-      ${scaleHTML(r.v,"dir-"+r.d)}
-      <span class="gr">${r.v.toFixed(2)} · ${r.g}${r.p?"·잠정":""}</span></div>`).join("");
+      <div class="ev-l"><span class="ev-id">${esc(obsId(r.rid))}</span>
+        <span class="chip dir-${r.d}">${r.d}</span><span class="gr">${r.g}${r.p?"·잠정":""}</span>
+        ${scaleHTML(r.v,"dir-"+r.d)}</div>
+      <div class="ev-r"><span class="cl">${esc(r.cl)}</span><span class="ev-src">${srcShort(r)}</span></div></div>`).join("");
   const evTable=`<div class="evtable">
-      <div class="hr-row"><div>RULE ID</div><div>DIR</div><div>AGREEMENT</div><div>CLAIM</div><div>SOURCE</div></div>
+      <div class="hr-row"><div>ID</div><div>DIR</div><div>GR</div><div>AGREEMENT</div><div>CLAIM</div><div>SOURCE</div></div>
       ${rows.map(r=>`<div class="tr">
         <div class="idc">${esc(obsId(r.rid))}</div>
         <div class="dirc dir-${r.d}">${r.d}</div>
-        <div class="gradecell">${scaleHTML(r.v,"dir-"+r.d)}<span>${r.v.toFixed(2)} ${r.g}${r.p?"·P":""}</span></div>
+        <div class="grc">${r.g}${r.p?"·P":""}</div>
+        <div class="gradecell">${scaleHTML(r.v,"dir-"+r.d)}<span>${r.v.toFixed(2)}</span></div>
         <div>${esc(r.cl)}${r.m<1?' <span class="gr">· 조건 부분일치</span>':""}</div>
         <div class="src">${esc(r.ref)}<br>${esc(lineageShort(r.lin))}</div></div>`).join("")}</div>`;
   const vsub=(VSUB[e.call]||"")+" 앞일을 정한 것이 아니라, 자료가 이 꿈을 읽어온 방향입니다.";
@@ -1491,9 +1509,10 @@ function finish(){
       <div class="panel-h">${ICON("list")}<span class="sec">수집 사례 — 실사용 해몽 글에서</span></div>
       <div id="cases-out"><p class="hint">수집된 유사 사례를 찾는 중…</p></div>
     </div>`:"";
-  const obsDate=new Date(cur.ts), obsD=`${obsDate.getFullYear()}.${String(obsDate.getMonth()+1).padStart(2,"0")}.${String(obsDate.getDate()).padStart(2,"0")}`;
+  const obsN=(()=>{try{return loadJ().length+1;}catch(err){return 1;}})();
+  const rset=`R-SET ${String(obsN).padStart(3,"0")}`;
   const left=`
-    <p class="obs-log"><b>OBSERVATION LOG</b><span>${obsD} · KB ${esc(String(KB.kb_version||""))}</span></p>
+    <p class="obs-log"><b>OBSERVATION LOG</b><span>${rset} · KB ${esc(String(KB.kb_version||""))}</span></p>
     <div class="verdict v-${e.call}">
       <span class="vdial" aria-hidden="true"><svg viewBox="0 0 56 56">
         <circle cx="28" cy="28" r="27.5" fill="none" stroke="currentColor" opacity=".35" stroke-width="1"/>
@@ -1505,16 +1524,16 @@ function finish(){
       <div class="balance">
         <div class="bhead"><b>BALANCE</b><span class="dir-${bdir}" style="color:var(--vc)">${e.balance>0?"+":""}${e.balance}</span></div>
         ${balScale}
-        <div class="bhead" style="margin-top:6px"><b>EVIDENCE ${String(e.evidence.length).padStart(2,"0")} / ${String(e.evidence.length).padStart(2,"0")} 반영</b></div>
-        ${bar}${legend}
+        <div class="bhead" style="margin-top:6px"><b>EVIDENCE ${String(e.evidence.length).padStart(2,"0")} / ${String(e.evidence.length).padStart(2,"0")} 반영</b>${legend}</div>
+        ${bar}
       </div>
     </div>
     ${synthPanel}
     ${approxPanel}
-    ${cur.minority.length?`<div class="panel"><div class="panel-h">${ICON("branch")}<span class="sec">소수의견</span></div>
+    ${cur.minority.length?`<div class="panel"><div class="bhead"><b>MINORITY READING</b><span class="mono-tag">판정 제외</span></div>
       <p class="quote">“${esc(cur.minority[0])}”</p>
       <p class="hint">이렇게 읽는 계보도 있습니다. 자료 수가 적어 판정에는 반영되지 않았습니다.</p></div>`:""}
-    <div class="panel" id="liked-panel" ${liked.length?"":"hidden"}><div class="panel-h">${ICON("heart")}<span class="sec">당신에게 와닿은 읽기</span></div>
+    <div class="panel" id="liked-panel" ${liked.length?"":"hidden"}><div class="bhead"><b id="liked-k">MARKED BY YOU ${String(liked.length).padStart(2,"0")}</b></div>
       <div id="liked-items"></div>
       <p class="hint">공감한 읽기는 해설의 초점만 바꿉니다. 판정 방향은 근거가 정합니다.</p></div>`;
   const hypRow=(c,i)=>{
@@ -1534,20 +1553,23 @@ function finish(){
     <div id="hlist">${cur.cards.map(hypRow).join("")}</div></div>`;
   const right=`
     ${hypList}
-    <div class="res-head"><h2>판정에 반영된 근거 전체</h2>
-      <p>위 해석 밖의 근거도 모두 판정에 들어갑니다. 등급은 자료 간 일치도이지, 미래 사건의 가능성이 아닙니다.</p></div>
+    <div class="res-head"><h2>EVIDENCE LOG</h2>
+      <p>카드로 보여드린 해석 밖의 근거도 모두 판정에 들어갑니다. 등급은 자료 간 일치도이지, 미래 사건의 가능성이 아닙니다.</p></div>
     ${e.evidence.length?evTable:'<div class="panel"><p class="hint">매칭된 근거가 없습니다.</p></div>'}
-    <details class="acc"><summary><span class="l">${ICON("list")}반영된 근거 전체 보기</span><svg class="i cv"><use href="#i-down"/></svg></summary>
-      <div class="evbody">${evList||'<p class="hint" style="padding:12px 0">매칭된 근거가 없습니다</p>'}</div></details>
+    <div class="panel evlog"><div class="bhead"><b class="amber">EVIDENCE LOG</b>
+        <span class="mono-tag">${String(e.evidence.length).padStart(2,"0")} / ${String(e.evidence.length).padStart(2,"0")} 반영 · ${[["흉",nB],["중립",nZ],["길",nG]].filter(x=>x[1]).map(x=>x[0]+" "+x[1]).join(" ")}</span></div>
+      ${evList||'<p class="hint" style="padding:12px 0">매칭된 근거가 없습니다</p>'}</div>
     ${cur.ex.narrative_context.length?`<details class="acc"><summary><span class="l">${ICON("info")}해석에 쓰지 않은 배경 정보</span><svg class="i cv"><use href="#i-down"/></svg></summary>
       <div class="evbody"><p class="hint" style="padding:12px 0">${esc(cur.ex.narrative_context.join(" · "))} — 지명·숫자 등은 상징으로 해석하지 않습니다</p></div></details>`:""}
-    ${MODE==="full"?`<div class="explain-row"><div><b>이 판정을 문장으로 풀어 읽기</b>
+    ${MODE==="full"?`<div class="explain-row"><div class="er-t"><b>이 판정을 문장으로 풀어 읽기</b>
         <p>해설은 확정된 판정을 설명할 뿐, 방향을 바꾸거나 뒤집지 않습니다.</p></div>
-        <button class="btn" id="explain">${ICON("book")}해설 보기</button></div>
+        <button class="btn soft" id="explain">${ICON("book")}해설 보기</button></div>
       <p class="explain-note">해설은 확정된 판정을 설명할 뿐, 판정을 바꾸지 않습니다</p>
       <div class="expl" id="expl-out"></div>`:""}
+    <div class="obsave">${ICON("ccheck")}<span>OBS ${String(obsN).padStart(3,"0")} 저장됨 — 원문·가설·표시·판정이 이 브라우저에 기록되었습니다</span></div>
     <div class="resfoot">
-      <button class="btn ghost" id="again">${ICON("plus")}새 꿈 관측하기</button>
+      <button class="btn ghost" id="open-journal">${ICON("scroll")}기록 열기</button>
+      <button class="btn" id="again">${ICON("plus")}새 관측</button>
     </div>`;
   $("v-result").innerHTML=`<div class="res-grid"><div class="rescol">${left}</div><div class="rescol">${right}</div></div>`;
   show("v-result");
@@ -1561,6 +1583,7 @@ function finish(){
   });
   if(isHold){ logGap(); renderCases("cases-out",gapKeywords()); if(MODE==="full") runApprox(); }
   $("again").onclick=()=>{ $("dream").value=""; show("v-input"); };
+  const oj=$("open-journal"); if(oj)oj.onclick=()=>{ setTab(false); renderJournal(); };
   const ex=$("explain");
   if(ex)ex.onclick=async()=>{
     ex.disabled=true; $("expl-out").textContent="해설 작성 중…";
@@ -1580,6 +1603,7 @@ function updateLiked(){
   const p=$("liked-panel"),it=$("liked-items"); if(!p||!it)return;
   const liked=cur.cards.filter((c,i)=>cur.swipes[i]==="와닿음");
   p.hidden=!liked.length;
+  const k=$("liked-k"); if(k)k.textContent=`MARKED BY YOU ${String(liked.length).padStart(2,"0")}`;
   it.innerHTML=liked.map(c=>`<div class="likeitem"><i></i><p>${esc(c.claim)}</p></div>`).join("");
 }
 function patchJournalSwipes(){
