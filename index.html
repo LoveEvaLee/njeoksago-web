@@ -999,7 +999,7 @@ function liteExtract(text){
   if(/무사|다치지 않|멀쩡/.test(text))f.injury="none";
   if(/잡혔|붙잡/.test(text))f.outcome="caught";
   else if(/도망쳤|벗어났|빠져나(왔|간)/.test(text))f.outcome="escaped";
-  else if(/멈췄|끝났|해결/.test(text))f.outcome="resolved";
+  else if(/멈췄|끝났|해결|되찾|다시 찾|찾았/.test(text))f.outcome="resolved";
   else if(/향하는|향했|가는 중|매달려|버티/.test(text))f.outcome="in_progress";
   if(/무서|두려|공포/.test(text))f.emotion="fear";
   if(/브레이크|통제.{0,4}(불능|상실)|멈출 수 없/.test(text))f.control="lost";
@@ -1533,9 +1533,13 @@ function finish(){
     ${narrLine}${synthText?`<p class="synth-p">${synthText}</p>`:""}</div>`:"";
   const approxPanel=isHold?`<div class="panel approx" id="approx-slot">
       <div class="panel-h">${ICON("info")}<span class="sec">왜 판정을 유보했나요</span></div>
-      <div id="approx-out"><p class="hint">${MODE==="full"
-        ?"자료들이 갈리는 지점을 정리하는 중…"
-        :"라이트 모드에서는 유보 사유 설명을 만들 수 없어요. claude.ai에서 열면 자료들이 갈리는 지점과 확인 질문을 정리해 드립니다."}</p></div>
+      <div id="approx-out">${MODE==="full"
+        ?'<p class="hint">자료들이 갈리는 지점을 정리하는 중…</p>'
+        :(()=>{const cs=[...new Set(cur.ex.scenes.flatMap(s2=>s2.concepts.map(c2=>c2.concept_id)))];
+           return cs.length
+             ?`<p class="ins-p">이 꿈에서 <b>${cs.map(id=>esc(cLabel(id))).join(" · ")}</b>${josaKG(cLabel(cs[0]))==="이"?"을":"를"} 읽어냈지만, 이 전개(행동·결말)에 대한 검증된 근거가 아직 얇아 판정을 정하지 않았어요. 아래 버튼으로 상징별 전통 해석 전체를 사전처럼 볼 수 있어요.</p>`
+               +cs.slice(0,3).map(id=>`<button class="btn soft" style="margin-top:9px" onclick="document.getElementById('dream').value='${esc(cLabel(id))} 꿈';document.getElementById('go').click()">${esc(cLabel(id))} 사전 보기</button>`).join(" ")
+             :`<p class="ins-p">이 꿈에서 사전에 등록된 상징을 읽어내지 못했어요. <b>핵심 단어 중심으로 짧게</b>(예: "아들 잃어버리는 꿈") 다시 적으면 조건별 해석을 사전처럼 보여드리고, 이 표현은 수집 대기열에 올라가 다음 업데이트에 반영돼요.</p>`;})()}</div>
       <p class="hint">위 판정(유보)은 그대로입니다. 이 설명은 어느 쪽 결론도 내리지 않으며, 판정 점수에 반영되지 않습니다.</p>
     </div>
     <details class="deep"><summary><span class="l">${ICON("list")}수집 사례 — 실사용 해몽 글에서</span><svg class="i cv"><use href="#i-down"/></svg></summary>
