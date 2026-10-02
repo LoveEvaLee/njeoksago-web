@@ -96,7 +96,10 @@ button{font:inherit}
 .topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:22px 0 6px}
 .brand{display:flex;align-items:center;gap:10px;min-width:0}
 .brand .mk{width:20px;height:20px;color:var(--silver);flex:none}
-.brand h1{font-family:var(--serif);font-size:20px;margin:0;letter-spacing:-.01em;white-space:nowrap}
+.brand{cursor:pointer;-webkit-tap-highlight-color:transparent}
+.brand:hover h1,.brand:hover .mk{color:var(--amber)}
+.brand:focus-visible{outline:1px solid var(--amber);outline-offset:4px;border-radius:4px}
+.brand h1{font-family:var(--serif);font-size:20px;margin:0;letter-spacing:-.01em;white-space:nowrap;transition:color .15s}
 .tagline{display:none;font-family:var(--mono);font-size:9.5px;letter-spacing:.14em;color:var(--silver3);
   padding-left:12px;border-left:1px solid var(--hair2)}
 .navright{display:flex;align-items:center;gap:12px}
@@ -392,6 +395,23 @@ details.acc>summary .l{display:flex;align-items:center;gap:10px}
 details.acc>summary .l .i{width:13px;height:13px;color:var(--amber)}
 details.acc>summary .cv{width:14px;height:14px;color:var(--silver3);transition:transform .2s}
 details.acc[open]>summary .cv{transform:rotate(180deg)}
+/* 접이식 심화 블록 — 모바일·데스크톱 공통 (근거/사례는 원할 때만 펼침) */
+details.deep{margin-top:14px;background:var(--plate);border:1px solid var(--hair);border-radius:6px;overflow:hidden}
+details.deep>summary{display:flex;align-items:center;justify-content:space-between;gap:10px;
+  padding:14px 16px;cursor:pointer;font-family:var(--mono);font-size:10px;letter-spacing:.1em;color:var(--silver2);list-style:none}
+details.deep>summary::-webkit-details-marker{display:none}
+details.deep>summary:hover{color:var(--amber)}
+details.deep>summary .l{display:flex;align-items:center;gap:10px;min-width:0;flex-wrap:wrap}
+details.deep>summary .l .i{width:13px;height:13px;color:var(--amber);flex:none}
+details.deep>summary .dm{font-family:var(--mono);font-size:9px;letter-spacing:.06em;color:var(--silver3)}
+details.deep>summary .cv{width:14px;height:14px;color:var(--silver3);transition:transform .2s;flex:none}
+details.deep[open]>summary{border-bottom:1px solid var(--hair)}
+details.deep[open]>summary .cv{transform:rotate(180deg)}
+.deepbody{padding:14px 16px 16px;display:flex;flex-direction:column;gap:14px}
+.deepbody>p.hint{margin:0}
+.deepbody details.acc{display:block;margin-top:0}
+.deepbody .panel{margin-top:0}
+.deepbody .explain-row{margin-top:0}
 .evbody{padding:0 16px 8px}
 /* EVIDENCE LOG 행 (모바일 — Pencil A03) */
 .evrow{display:flex;gap:12px;align-items:flex-start;padding:11px 0 12px;border-top:1px solid var(--hair);font-size:12px;line-height:1.65}
@@ -690,7 +710,7 @@ details.acc[open]>summary .cv{transform:rotate(180deg)}
 
 <div class="shell">
   <header class="topbar">
-    <div class="brand">
+    <div class="brand" id="brand-home" role="button" tabindex="0" title="처음 화면으로" aria-label="처음 화면으로">
       <svg class="mk" viewBox="0 0 40 40" aria-hidden="true"><use href="#s-mark"/></svg>
       <h1>N적사고</h1>
       <span class="tagline">DREAM OBSERVATORY</span>
