@@ -1211,7 +1211,7 @@ function renderDict(hits,raw){
       return `<div class="dictrow" data-g="${gi}">
         <span class="chip dir-${r.direction}">${r.direction}</span>
         <div class="dr-main"><p class="cl">${esc(r.claim)}</p>
-          <p class="dr-cond">${esc(condLabel(r.condition))}${r.ref?` · <span class="src">${esc(r.ref)}</span>`:""}</p></div>
+          <p class="dr-cond">${esc(condLabel(r.condition))}${r.basis?` · <span class="src">${esc(r.basis)}</span>`:""}</p></div>
         <span class="gr">${r.grade}${r.provisional?"·잠정":""}</span></div>`;
     }).join("");
     const empty=`<div class="panel"><p class="hint">이 상징은 아직 검증된 규칙이 없어요. 대신 수집된 실사용 해몽 사례를 보여드리고, 이 키워드는 수집 대기열에 올려둡니다.</p></div>
@@ -1234,8 +1234,12 @@ function renderDict(hits,raw){
         const parts=[];
         if(g)parts.push(`<b>${esc(condLabel(g.condition))}</b> 쪽 전개는 좋은 신호`);
         if(b)parts.push(`<b>${esc(condLabel(b.condition))}</b> 쪽 전개는 조심 신호`);
+        /* 웹 합의 신호 — 상징별 집계 수치(건수·길흉비)만, 판정 비개입 */
+        const ws=(KB.web_signal||{})[c.concept_id];let webLine="";
+        if(ws&&ws.n){const tone=ws.ratio>=0.6?"좋게 읽는 글이 더 많았어요":ws.ratio<=0.4?"조심스럽게 읽는 글이 더 많았어요":"좋게 읽는 글과 조심하는 글이 비슷하게 갈렸어요";
+          webLine=` 실제 웹에서 모은 이 상징 꿈 이야기 <b>${ws.n.toLocaleString()}건</b>을 집계해 보면 ${tone}.`;}
         return `<div class="panel synth" style="margin:10px 0 4px"><div class="panel-h">${ICON("book")}<span class="sec">대체로 이렇게 읽혀요</span></div>
-          <p class="synth-p" style="font-size:12.5px">${base}${parts.length?" "+parts.join(", ")+"예요 — 자세한 풀이는 아래 목록에 있어요.":""} 실제 꿈이 어떻게 흘러갔는지 문장으로 적어주시면 조건을 맞춰 판정까지 계산해 드려요.</p></div>`;})():""}
+          <p class="synth-p" style="font-size:12.5px">${base}${parts.length?" "+parts.join(", ")+"예요 — 자세한 풀이는 아래 목록에 있어요.":""}${webLine} 실제 꿈이 어떻게 흘러갔는지 문장으로 적어주시면 조건을 맞춰 판정까지 계산해 드려요.</p></div>`;})():""}
       ${chips}
       ${rules.length?`<div class="dictlist">${rows}</div>`:empty}
     </div>`;
@@ -1303,7 +1307,9 @@ const agree=c=>{
 };
 const scaleHTML=(v,cls)=>`<span class="scale ${cls||""}" style="--v:${Math.max(0,Math.min(1,v)).toFixed(3)}"><i class="ax"></i><i class="fi"></i><i class="mk"></i></span>`;
 const obsId=rid=>String(rid||"").replace(/^kb:/,"").toUpperCase()||"—";
-const lineageShort=l=>String(l||"").replace(/\s*\([^)]*\)\s*/g," ").trim()||"출처 미기재";
+/* 공개면 출처 합성(2026-10-02) — 서지·페이지는 내부 KB에만 있고, 앱은 합성 라벨(basis)만 표시 */
+let _BMAP=null;
+const basisOf=rid=>{if(!_BMAP){_BMAP={};(KB.rules||[]).forEach(r=>_BMAP[r.rule_id]=r.basis||"");}return _BMAP[String(rid||"")]||"";};
 
 function renderDeck(){
   const d=$("deck"); d.innerHTML="";
@@ -1329,9 +1335,10 @@ function cardHTML(c,n){
   const cond=c.type==="kb"
     ? `<p class="cond${c.match>=1?"":" part"}">COND  ${c.match>=1?"이번 꿈의 조건과 전부 일치":"이번 꿈의 조건과 부분 일치"}</p>`:"";
   const v=c.type==="kb"?agree(c):0;
+  const bs=c.type==="kb"?basisOf(c.rid):"";
   const foot=c.type==="kb"
     ? `<div class="cfoot">
-        ${c.ref?`<div class="ref">${ICON("scroll")}<b>SRC</b><span>${esc(c.ref)}${c.lineage?" · "+esc(lineageShort(c.lineage)):""}</span></div>`:""}
+        ${bs?`<div class="ref">${ICON("scroll")}<b>SRC</b><span>${esc(bs)}</span></div>`:""}
         <div class="meter">AGREEMENT ${scaleHTML(v,"dir-"+c.dir)}<b>${v.toFixed(2)} · ${c.grade}</b></div></div>`
     : `<div class="cfoot"><div class="ref">${ICON("info")}<b>NOTE</b><span>판정 계산에는 쓰이지 않는 참고 카드입니다.</span></div></div>`;
   const idc=c.type==="kb"&&c.rid?esc(obsId(c.rid)):"REFERENCE";
@@ -1500,10 +1507,10 @@ function finish(){
       <i class="ax"></i><i class="fi"></i><i class="zero"></i><i class="mk"></i></div>
     <div class="bends"><span>−1 흉</span><span>0</span><span>길 +1</span></div>`;
   const rows=e.evidence.map(x=>({d:x.rule.direction,g:x.rule.grade,p:!!x.rule.provisional,
-    cl:x.rule.claim,ref:x.rule.ref||"출처 미기재",m:x.match,
-    rid:x.rule.rule_id,lin:x.rule.lineage,v:Math.max(0,Math.min(1,x.score/maxW()))}));
-  /* 출처 축약 — B·비잠정 = 두 계보 합의(승격 규약), 그 외 계보 한 줄 */
-  const srcShort=r=>esc(lineageShort(r.lin).split("『")[0].split("—")[0].trim().slice(0,16)||"출처 미기재")+(r.g==="B"&&!r.p?" · 2계보 합의":"");
+    cl:x.rule.claim,basis:x.rule.basis||"전통 해몽 문헌",m:x.match,
+    rid:x.rule.rule_id,v:Math.max(0,Math.min(1,x.score/maxW()))}));
+  /* 출처 합성 라벨 — 서지 대신 계보 성격만 (합의 여부는 basis에 포함) */
+  const srcShort=r=>esc(r.basis);
   const evList=rows.map(r=>`<div class="evrow">
       <div class="ev-l"><span class="ev-id">${esc(obsId(r.rid))}</span>
         <span class="chip dir-${r.d}">${r.d}</span><span class="gr">${r.g}${r.p?"·잠정":""}</span>
@@ -1517,7 +1524,7 @@ function finish(){
         <div class="grc">${r.g}${r.p?"·P":""}</div>
         <div class="gradecell">${scaleHTML(r.v,"dir-"+r.d)}<span>${r.v.toFixed(2)}</span></div>
         <div>${esc(r.cl)}${r.m<1?' <span class="gr">· 조건 부분일치</span>':""}</div>
-        <div class="src">${esc(r.ref)}<br>${esc(lineageShort(r.lin))}</div></div>`).join("")}</div>`;
+        <div class="src">${esc(r.basis)}</div></div>`).join("")}</div>`;
   const vsub=(VSUB[e.call]||"")+" 앞일을 정한 것이 아니라, 자료가 이 꿈을 읽어온 방향입니다.";
   const isHold=e.call==="판정유보";
   /* 종합 문단 — 코드 템플릿 조립(F7: claim 원문 인용, LLM 비개입 → 판정과 상충 불가) */
@@ -1596,7 +1603,7 @@ function finish(){
       ? `<span class="chip dir-${c.dir}">${c.dir}</span><span class="chip grade">일치도 ${c.grade}</span>${c.prov?'<span class="chip prov">잠정</span>':''}`
       : `<span class="chip u">${c.type==="psych"?"심리적 관점 · 판정 제외":"참고 관점 · 판정 제외"}</span>`;
     const cond=c.type==="kb"&&typeof c.match==="number"
-      ? `<span class="hl-cond">${c.match>=1?"조건 전부 일치":"조건 부분 일치"}${c.ref?` · ${esc(c.ref)}`:""}</span>`
+      ? `<span class="hl-cond">${c.match>=1?"조건 전부 일치":"조건 부분 일치"}${basisOf(c.rid)?` · ${esc(basisOf(c.rid))}`:""}</span>`
       : "";
     return `<div class="hlrow">
       <div class="hl-main"><div class="hchips">${chips}</div><p class="cl">${esc(c.claim)}</p>${cond}</div>
