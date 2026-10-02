@@ -990,8 +990,11 @@ function sanitize(o){
 /* 라이트 모드 — 별칭·키워드 간이 추출 */
 function liteExtract(text){
   const cons=[];
+  /* 한 글자 별칭(뱀·불·돈·똥·피·차…)은 조사 경계로 매칭 — '불이/돈을'은 잡고 '비행기/돈가스'는 차단 (2026-10-02) */
+  const ONE_SKIP={"먹":1,"널":1,"분":1,"신":1}; // 동사·일상어 충돌(먹는/널/5분/신다) — 2자 별칭으로만
+  const one=a=>!ONE_SKIP[a]&&new RegExp("(^|[^가-힣])"+a+"(?=(?:이|가|을|를|은|는|에|의|도|만|랑|으로|로|한테|에게|께|부터|까지|처럼)?(?:[^가-힣]|$))").test(text);
   for(const c of KB.extract_view)
-    if(c.aliases.some(a=>a.length>1&&text.includes(a))) cons.push({concept_id:c.concept_id,facts:liteFacts(text,c)});
+    if(c.aliases.some(a=>a.length>1?text.includes(a):one(a))) cons.push({concept_id:c.concept_id,facts:liteFacts(text,c)});
   const f={};
   if(/무사|다치지 않|멀쩡/.test(text))f.injury="none";
   if(/잡혔|붙잡/.test(text))f.outcome="caught";
@@ -1011,9 +1014,16 @@ function liteFacts(t,c){
   if(c.facts.includes("action")){
     if(/놓쳤|놓치|도망가/.test(t))f.action="놓침";
     else if(/잡았|잡혔|잡히|낚/.test(t))f.action="잡음";
-    else if(/잃어|없어졌/.test(t))f.action="잃음";
+    else if(/잃어|없어졌|도둑맞/.test(t))f.action="잃음";
     else if(/주웠|주었|받았/.test(t))f.action="줍음";
     else if(/빠졌|빠지/.test(t)&&c.concept_id==="tooth")f.action="빠짐_치아";
+    else if(/물렸|물리는|물어/.test(t))f.action="물림";
+    else if(/할퀴/.test(t))f.action="할큄";
+    else if(/들어왔|들어오/.test(t))f.action="진입";
+    else if(/추락|떨어졌|떨어지/.test(t))f.action="떨어짐";
+    else if(/올라갔|올라가|승천/.test(t))f.action="오름";
+    else if(/뱉/.test(t))f.action="뱉음";
+    else if(/쫓기|쫓아오|따라왔|따라오/.test(t))f.action="쫓김";
   }
   if(c.facts.includes("state")){
     if(/맑/.test(t))f.state="맑음"; else if(/흙탕|탁|흐린 물/.test(t))f.state="탁함";
