@@ -412,6 +412,11 @@ details.deep[open]>summary .cv{transform:rotate(180deg)}
 .deepbody details.acc{display:block;margin-top:0}
 .deepbody .panel{margin-top:0}
 .deepbody .explain-row{margin-top:0}
+/* 결과 — 가운데 1단 스택: 판정·한 문단이 상단, 해석/근거는 접이식 */
+.res-grid.one{grid-template-columns:minmax(0,1fr);max-width:720px;margin:0 auto}
+.res-grid.one .panel.synth .synth-p{font-size:14px;line-height:2}
+.deepbody.hlist-panel{gap:8px}
+.deepbody.hlist-panel #hlist{gap:0}
 .evbody{padding:0 16px 8px}
 /* EVIDENCE LOG 행 (모바일 — Pencil A03) */
 .evrow{display:flex;gap:12px;align-items:flex-start;padding:11px 0 12px;border-top:1px solid var(--hair);font-size:12px;line-height:1.65}
@@ -1001,7 +1006,10 @@ function liteExtract(text){
     if(c.aliases.some(a=>a.length>1?text.includes(a):one(a))) cons.push({concept_id:c.concept_id,facts:liteFacts(text,c)});
   const f={};
   if(/무사|다치지 않|멀쩡/.test(text))f.injury="none";
-  if(/잡혔|붙잡/.test(text))f.outcome="caught";
+  /* 구조 서사 — 누군가 구해줌(타인 작용) / 위협을 제압·격퇴 (2026-10-08, 실꿈 체감 사례) */
+  if(/구해 ?주|구해 ?줬|구출|구조(돼|되|해)|살려 ?주|살려 ?줬/.test(text)){f.outcome="resolved";f.agency="other";}
+  else if(/때려 ?눕|제압|물리쳤|무찔|쫓아냈|격퇴/.test(text))f.outcome="resolved";
+  else if(/잡혔|붙잡/.test(text))f.outcome="caught";
   else if(/도망쳤|벗어났|빠져나(왔|간)/.test(text))f.outcome="escaped";
   else if(/멈췄|끝났|해결|되찾|다시 찾|찾았/.test(text))f.outcome="resolved";
   else if(/향하는|향했|가는 중|매달려|버티/.test(text))f.outcome="in_progress";
@@ -1538,20 +1546,36 @@ function finish(){
     const cl=x=>x?esc(x.rule.claim.replace(/\.$/,"")):"";
     const josa=(w,a,b)=>{const c=w.charCodeAt(w.length-1);return w+((c>=0xAC00&&(c-0xAC00)%28>0)?a:b);};
     const josa2=(w,a,b)=>{const c=w.charCodeAt(w.length-1);return (c>=0xAC00&&(c-0xAC00)%28>0)?a:b;};
-    const lab=x=>x&&x.rule.concept?esc(cLabel(x.rule.concept)):"이번 장면";
+    const lab=x=>x&&x.rule.concept?esc(cLabel(x.rule.concept)):"결말";  /* 전역 rule(구조 서사 등)은 '결말 장면'으로 */
     const part=x=>x&&x.match<1?" (꿈의 정황과 완전히 겹치진 않았어요)":"";
-    if(e.call==="길몽")
-      return `꿈의 중심에 있던 ${josa(lab(G[0]),"이","가")} 좋은 신호로 읽혔어요. 전통적으로 “${cl(G[0])}”${josa2(cl(G[0]),"이라고","라고")} 봐요${part(G[0])}.`
+    /* 인용 선정 — 조건 전부 일치(match≥1) 우선, 반대편과 같은 상징은 가능하면 회피 (2026-10-08: 같은 '차' 장면을 길·흉 양쪽에 인용하던 문제) */
+    const pickQ=(arr,avoid)=>arr.find(x=>x.match>=1&&x.rule.concept&&x.rule.concept!==avoid)
+      ||arr.find(x=>x.match>=1)||arr[0];
+    /* 복합꿈 — 주 인용 2개 밖의 상징도 한 줄 언급(단편 해석 체감 방지) */
+    const extraOf=used=>{const pool=e.evidence.filter(x=>x.match>=1&&x.rule.concept&&!used.has(x.rule.concept));
+      return pool.sort((a,b)=>b.score-a.score)[0];};
+    const extraLine=x=>x?` 함께 잡힌 ${lab(x)} 장면은 “${cl(x)}”${josa2(cl(x),"이라는","라는")} 읽기도 있어요.`:"";
+    if(e.call==="길몽"){
+      const g1=pickQ(G,null),ex2=extraOf(new Set([g1&&g1.rule.concept]));
+      return `꿈의 중심에 있던 ${josa(lab(g1),"이","가")} 좋은 신호로 읽혔어요. 전통적으로 “${cl(g1)}”${josa2(cl(g1),"이라고","라고")} 봐요${part(g1)}.`
         +(B.length?" 마음에 걸릴 만한 장면도 있었지만, 좋은 신호의 무게가 더 컸어요.":"")
-        +" 편하게 받아들여도 되는 꿈이에요.";
-    if(e.call==="흉몽")
-      return `${josa(lab(B[0]),"이","가")} 조심하라는 신호로 읽혔어요. 전통적으로 “${cl(B[0])}”${josa2(cl(B[0]),"이라고","라고")} 봐요${part(B[0])}.`
+        +extraLine(ex2)
+        +" 오늘은 어깨 펴고 다녀도 되는 꿈이에요.";
+    }
+    if(e.call==="흉몽"){
+      const b1=pickQ(B,null);
+      return `${josa(lab(b1),"이","가")} 조심하라는 신호로 읽혔어요. 전통적으로 “${cl(b1)}”${josa2(cl(b1),"이라고","라고")} 봐요${part(b1)}.`
         +(G.length?" 좋게 읽히는 장면도 있었지만 무게는 조심 쪽이었어요.":"")
         +" 나쁜 일이 정해졌다는 뜻은 아니에요 — 요즘 마음 쓰이던 일이 있다면 한 번 점검해 보라는 정도로 받아들이면 충분해요.";
+    }
     if(e.call==="혼합"){
-      const lean=e.balance>0.15?" 굳이 따지면 좋은 쪽이 조금 더 무거웠어요."
-        :e.balance<-0.15?" 굳이 따지면 조심 쪽이 조금 더 무거웠어요.":"";
-      return `이번 꿈에는 서로 다른 신호가 함께 있었어요. ${lab(G[0])} 장면은 “${cl(G[0])}”${josa2(cl(G[0]),"으로","로")}, ${lab(B[0])} 장면은 “${cl(B[0])}”${josa2(cl(B[0]),"으로","로")} 읽혀요. 어느 한쪽이 뚜렷하게 세지 않아서 억지로 정하지 않았어요 — 좋은 흐름과 조심할 지점이 같이 있는 꿈이라고 보면 돼요.${lean}`;
+      const lean=e.balance>0.15?" 굳이 저울을 보면 좋은 쪽이 조금 더 무거웠어요."
+        :e.balance<-0.15?" 굳이 저울을 보면 조심 쪽이 조금 더 무거웠어요.":"";
+      const g1=pickQ(G,null),b1=pickQ(B,g1&&g1.rule.concept);
+      if(g1&&b1&&g1.rule.concept&&g1.rule.concept===b1.rule.concept)
+        return `이번 꿈의 ${lab(g1)} 장면을 두고 전통 자료의 읽기가 갈려요 — 좋게는 “${cl(g1)}”, 조심스럽게는 “${cl(b1)}”. 꿈이 어느 전개였는지에 따라 저울이 기울어요${part(g1)||part(b1)?" (이번 서술로는 조건이 다 확인되지 않았어요)":""}.${lean} 좋은 흐름과 조심할 지점을 같이 품은 꿈으로 보면 돼요.`;
+      const ex2=extraOf(new Set([g1&&g1.rule.concept,b1&&b1.rule.concept]));
+      return `이번 꿈, 장면이 꽤 극적이었네요 — 좋은 신호와 조심 신호가 같이 잡혔어요. ${lab(g1)} 장면은 “${cl(g1)}”${josa2(cl(g1),"으로","로")} 읽히는 반면${part(g1)}, ${lab(b1)} 장면은 “${cl(b1)}”${josa2(cl(b1),"이라고","라고")} 봐요${part(b1)}.${extraLine(ex2)} 어느 한쪽이 뚜렷하게 세지 않아서 억지로 정하지 않았어요 — 좋은 흐름과 조심할 지점이 같이 있는 꿈이에요.${lean}`;
     }
     if(e.call==="중립")
       return "길흉을 가를 만한 사건보다 일상의 잔상에 가까운 꿈이었어요. 요즘의 하루가 꿈에 그대로 배어 나온 정도로 보면 충분해요.";
@@ -1594,7 +1618,8 @@ function finish(){
         ${bar}
       </div>
     </div>
-    ${synthPanel}
+    ${synthPanel}`;
+  const leftRest=`
     ${approxPanel}
     ${cur.minority.length?`<div class="panel"><div class="bhead"><b>MINORITY READING</b><span class="mono-tag">판정 제외</span></div>
       <p class="quote">“${esc(cur.minority[0])}”</p>
@@ -1613,10 +1638,11 @@ function finish(){
       <div class="hl-main"><div class="hchips">${chips}</div><p class="cl">${esc(c.claim)}</p>${cond}</div>
       <button class="heart${cur.swipes[i]==="와닿음"?" on":""}" data-i="${i}" title="와닿음" aria-label="와닿음 표시">♥</button></div>`;
   };
-  const hypList=`<div class="panel hlist-panel">
-    <div class="panel-h">${ICON("branch")}<span class="sec">이 꿈에 대한 해석 ${cur.cards.length}가지</span></div>
-    <p class="hint" style="margin:2px 0 4px">와닿는 해석에 ♥를 남기면 해설의 초점이 맞춰집니다. 판정 방향은 바뀌지 않습니다.</p>
-    <div id="hlist">${cur.cards.map(hypRow).join("")}</div></div>`;
+  const hypList=`<details class="deep" id="deep-hyp">
+    <summary><span class="l">${ICON("branch")}이 꿈에 대한 해석 ${cur.cards.length}가지<span class="dm">근거별로 읽는 방법</span></span><svg class="i cv"><use href="#i-down"/></svg></summary>
+    <div class="deepbody hlist-panel">
+      <p class="hint">와닿는 해석에 ♥를 남기면 해설의 초점이 맞춰집니다. 판정 방향은 바뀌지 않습니다.</p>
+      <div id="hlist">${cur.cards.map(hypRow).join("")}</div></div></details>`;
   /* 근거·해설은 기본 접힘 — 원할 때만 펼쳐 본다 (맨 아래 배치) */
   const evDeep=`<details class="deep" id="deep-ev">
       <summary><span class="l">${ICON("list")}분석 자세히 보기<span class="dm">근거 ${String(e.evidence.length).padStart(2,"0")}건${[["흉",nB],["중립",nZ],["길",nG]].filter(x=>x[1]).length?" · "+[["흉",nB],["중립",nZ],["길",nG]].filter(x=>x[1]).map(x=>x[0]+" "+x[1]).join(" "):""}</span></span><svg class="i cv"><use href="#i-down"/></svg></summary>
@@ -1634,14 +1660,13 @@ function finish(){
           <div class="expl" id="expl-out"></div>`:""}
       </div></details>`;
   const right=`
-    ${hypList}
     <div class="obsave">${ICON("ccheck")}<span>OBS ${String(obsN).padStart(3,"0")} 저장됨 — 원문·가설·표시·판정이 이 브라우저에 기록되었습니다</span></div>
     ${evDeep}
     <div class="resfoot">
       <button class="btn ghost" id="open-journal">${ICON("scroll")}기록 열기</button>
       <button class="btn" id="again">${ICON("plus")}새 관측</button>
     </div>`;
-  $("v-result").innerHTML=`<div class="res-grid"><div class="rescol">${left}</div><div class="rescol">${right}</div></div>`;
+  $("v-result").innerHTML=`<div class="res-grid one"><div class="rescol">${left}${hypList}${leftRest}${right}</div></div>`;
   show("v-result");
   saveJournal();
   updateLiked();
@@ -1737,7 +1762,7 @@ function entryConcepts(r){
   const t=r.text||"";
   return KB.extract_view.filter(c=>c.aliases.some(al=>al.length>1&&t.includes(al))).map(c=>c.concept_id);
 }
-const cLabel=id=>{const c=KB.extract_view.find(x=>x.concept_id===id);return c?c.aliases[0]:id;};
+const cLabel=id=>{const c=KB.extract_view.find(x=>x.concept_id===id);return c?(c.label||c.aliases[0]):id;};
 function renderInsights(){
   const a=loadJ(), el=$("insight-body"); if(!el)return;
   if(a.length<3){
