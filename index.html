@@ -262,6 +262,12 @@ textarea:focus{outline:1px solid var(--amber);outline-offset:-1px;border-color:t
 .btn.mono{font-family:var(--mono);font-size:10.5px;letter-spacing:.12em}
 .panel.synth{border-left:2px solid var(--amber-line)}
 .synth-narr{margin:6px 0 0;font-size:12px;line-height:1.85;color:var(--silver2);padding-bottom:8px;border-bottom:1px solid var(--hair)}
+.segrow{padding:8px 0 2px;border-bottom:1px dashed var(--hair)}
+.segrow:last-child{border-bottom:none}
+.seg-t{margin:0 0 4px;font-size:11px;color:var(--silver3);font-style:italic}
+.seg-r{margin:0 0 7px;font-size:12.5px;line-height:1.8}
+.seg-r .chip{margin-right:7px;vertical-align:1px}
+.seg-r .gr{font-size:10px;color:var(--silver3)}
 .synth-narr b{color:var(--amber)}
 .synth-p{margin:8px 0 0;font-size:13px;line-height:1.95;color:var(--silver)}
 .synth-p b{color:var(--vc,var(--amber))}
@@ -1003,10 +1009,15 @@ function liteExtract(text){
   const one=a=>{if(ONE_SKIP[a])return false;
     const t=ONE_GUARD[a]?text.replace(ONE_GUARD[a],""):text;
     return new RegExp("(^|[^가-힣])"+a+"(?=(?:이|가|을|를|은|는|에|의|도|만|랑|으로|로|한테|에게|께|부터|까지|처럼)?(?:[^가-힣]|$))").test(t);};
-  for(const c of KB.extract_view)
-    if(c.aliases.some(a=>a.length>1?text.includes(a):one(a))) cons.push({concept_id:c.concept_id,facts:liteFacts(text,c)});
+  /* 2자 이상 별칭 가드 — '그대로/뜻대로'의 '대로'가 大路로 오인되던 것 차단 (2026-10-10 실측: 별장 꿈에 '사방 큰길' 인용) */
+  const MULTI_GUARD={"대로":/[가-힣]대로/g};
+  const has=a=>a.length>1?(MULTI_GUARD[a]?text.replace(MULTI_GUARD[a],""):text).includes(a):one(a);
+  for(const c of KB.extract_view){
+    const hit=c.aliases.find(has);
+    if(hit) cons.push({concept_id:c.concept_id,facts:liteFacts(text,c),surf:hit});
+  }
   const f={};
-  if(/무사|다치지 않|멀쩡/.test(text))f.injury="none";
+  if(/무사|다치지 않|멀쩡|살아남|살아 남|생존/.test(text))f.injury="none";
   /* 구조 서사 — 누군가 구해줌(타인 작용) / 위협을 제압·격퇴 (2026-10-08, 실꿈 체감 사례) */
   if(/구해 ?주|구해 ?줬|구출|구조(돼|되|해)|살려 ?주|살려 ?줬/.test(text)){f.outcome="resolved";f.agency="other";}
   else if(/때려 ?눕|제압|물리쳤|무찔|쫓아냈|격퇴/.test(text))f.outcome="resolved";
@@ -1019,7 +1030,7 @@ function liteExtract(text){
   let goal=null;
   const gm=text.match(/([가-힣]{1,8}(?:한테|에게|께))\s*돌아가/)||text.match(/([가-힣]{1,6})(?:으로|로)\s*(?:돌아가|향하)/);
   if(gm)goal={서술:gm[1].trim()+" 돌아가기",status:/도착했|만났|돌아왔/.test(text)?"달성":"진행중"};
-  return {scenes:[{summary:"간이 분석",facts:f,concepts:cons.slice(0,8)}],
+  return {raw:text,scenes:[{summary:"간이 분석",facts:f,concepts:cons.slice(0,8)}],
     narrative_context:[],u_notes:[],psych_note:null,goal};
 }
 function liteFacts(t,c){
@@ -1590,7 +1601,36 @@ function finish(){
   })();
   const g=cur.ex.goal;
   const narrLine=g?`<p class="synth-narr">이 꿈의 목표는 <b>‘${esc(g.서술)}’</b>${g.status==="달성"?" — 꿈 안에서 이뤄졌어요.":g.status==="진행중"?"였어요. 꿈은 그 길 위에서 끝났고 — 도착 장면은 아직이에요. 아래 판정은 완주가 아니라 여정의 장면들로만 계산했어요.":g.status==="좌절"?"였지만 꿈 안에서는 막혔어요.":"였어요."}</p>`:"";
-  const synthPanel=(synthText||narrLine)?`<div class="panel synth"><div class="panel-h">${ICON("book")}<span class="sec">이 판정을 한 문단으로</span></div>
+  /* 장면별 읽기 — 꿈 문장을 의미 단위로 쪼개 상징→근거를 짝지어 보여줌 (결정적 조립·판정 비개입, 2026-10-10 유경 피드백) */
+  const segPanel=(()=>{
+    const sc=cur.ex.scenes||[];
+    const bestFor=cid=>{const pool=e.evidence.filter(x=>x.rule.concept===cid).sort((a,b)=>b.score-a.score);
+      return pool.find(x=>x.match>=1&&x.rule.direction!=="중립")||pool.find(x=>x.match>=1)||pool[0];};
+    let rows=[];
+    if(cur.ex.raw&&sc.length===1){ // 라이트: 쉼표·마침표 단위, 8자 미만 조각은 이웃과 병합
+      const parts=cur.ex.raw.split(/(?<=[,.!?…])\s*/).map(s=>s.replace(/[,.!?…]+$/,"").trim()).filter(Boolean);
+      const segs=[];for(const s of parts){ if(segs.length&&(s.length<8||segs[segs.length-1].length<8)) segs[segs.length-1]+=", "+s; else segs.push(s); }
+      const bySeg=segs.map(()=>[]);
+      for(const c2 of (sc[0].concepts||[])){
+        let idx=segs.findIndex(s=>c2.surf&&s.includes(c2.surf)); if(idx<0)idx=0;
+        bySeg[idx].push(c2);
+      }
+      rows=segs.map((s,i)=>({seg:s,cons:bySeg[i]}));
+    }else{
+      rows=sc.map(s2=>({seg:s2.요약||s2.summary||"장면",cons:s2.concepts||[]}));
+    }
+    const seen=new Set();
+    const lines=rows.map(r=>{
+      const reads=r.cons.map(c2=>{
+        if(seen.has(c2.concept_id))return null; seen.add(c2.concept_id);
+        const b=bestFor(c2.concept_id); if(!b)return null;
+        return `<p class="seg-r"><span class="chip dir-${b.rule.direction}">${b.rule.direction==="중립"?"상징":b.rule.direction}</span><b>${esc(cLabel(c2.concept_id))}</b> — ${esc(b.rule.claim.replace(/\.$/,""))}${b.match<1?' <span class="gr">· 이번 전개와는 조건이 일부만 겹쳐요</span>':""}</p>`;
+      }).filter(Boolean);
+      return reads.length?`<div class="segrow"><p class="seg-t">“${esc(r.seg.length>46?r.seg.slice(0,46)+"…":r.seg)}”</p>${reads.join("")}</div>`:null;
+    }).filter(Boolean).join("");
+    return lines?`<div class="panel synth"><div class="panel-h">${ICON("list")}<span class="sec">장면별 읽기</span></div>${lines}</div>`:"";
+  })();
+  const synthPanel=(synthText||narrLine)?`<div class="panel synth"><div class="panel-h">${ICON("book")}<span class="sec">그래서, 이 꿈은</span></div>
     ${narrLine}${synthText?`<p class="synth-p">${synthText}</p>`:""}</div>`:"";
   const approxPanel=isHold?`<div class="panel approx" id="approx-slot">
       <div class="panel-h">${ICON("info")}<span class="sec">왜 판정을 유보했나요</span></div>
@@ -1625,6 +1665,7 @@ function finish(){
         ${bar}
       </div>
     </div>
+    ${segPanel}
     ${synthPanel}`;
   const leftRest=`
     ${approxPanel}
