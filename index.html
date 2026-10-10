@@ -1112,7 +1112,7 @@ function runEngine(ex){
   // 보수 가드는 family 병합 '전' 매칭 수 기준 — 병합은 점수 인플레 방지용이지 근거 개수 부정이 아님
   const bEff=matches.filter(m=>m.rule.direction!=="중립"&&m.score>=0.25&&m.match>=0.5).length;
   const aExact=matches.some(m=>m.rule.grade==="A"&&!m.rule.provisional&&m.match===1);
-  // score-v2.1 (2026-10-02 유경 승인): 완전일치(exact) 방향성 근거 1개면 확정 허용 — 부분일치만으론 여전히 유보
+  // score-v2.1 (2026-10-02 운영자 승인): 완전일치(exact) 방향성 근거 1개면 확정 허용 — 부분일치만으론 여전히 유보
   const fullExact=matches.filter(m=>m.rule.direction!=="중립"&&m.match===1&&m.score>=0.25).length;
   const guard=aExact||bEff>=2||fullExact>=1;
   let call,reason,balance=0;
@@ -1605,7 +1605,7 @@ function finish(){
   })();
   const g=cur.ex.goal;
   const narrLine=g?`<p class="synth-narr">이 꿈의 목표는 <b>‘${esc(g.서술)}’</b>${g.status==="달성"?" — 꿈 안에서 이뤄졌어요.":g.status==="진행중"?"였어요. 꿈은 그 길 위에서 끝났고 — 도착 장면은 아직이에요. 아래 판정은 완주가 아니라 여정의 장면들로만 계산했어요.":g.status==="좌절"?"였지만 꿈 안에서는 막혔어요.":"였어요."}</p>`:"";
-  /* 장면별 읽기 — 꿈 문장을 의미 단위로 쪼개 상징→근거를 짝지어 보여줌 (결정적 조립·판정 비개입, 2026-10-10 유경 피드백) */
+  /* 장면별 읽기 — 꿈 문장을 의미 단위로 쪼개 상징→근거를 짝지어 보여줌 (결정적 조립·판정 비개입, 2026-10-10 사용자 피드백) */
   const segPanel=(()=>{
     const sc=cur.ex.scenes||[];
     const bestFor=cid=>{const pool=e.evidence.filter(x=>x.rule.concept===cid).sort((a,b)=>b.score-a.score);
@@ -2064,7 +2064,7 @@ $("jexport").onclick=async()=>{
 };
 </script>
 <script>
-/* 방문자 카운터(GoatCounter) — 공개 웹(github.io)에서만 로드. 쿠키 없음, 판정·엔진 무관 (2026-10-02 유경 승인) */
+/* 방문자 카운터(GoatCounter) — 공개 웹(github.io)에서만 로드. 쿠키 없음, 판정·엔진 무관 (2026-10-02 운영자 승인) */
 if(location.hostname.endsWith("github.io")){
   const g=document.createElement("script");
   g.dataset.goatcounter="https://njeoksago.goatcounter.com/count";
