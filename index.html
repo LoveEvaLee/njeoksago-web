@@ -1008,7 +1008,7 @@ function liteExtract(text){
     "검":/검은|검게|검디/g}; // '검은 연기'의 검정(形)이 검(劍)+조사 '은'으로 오인되던 것 차단 (2026-10-08 실측)
   const one=a=>{if(ONE_SKIP[a])return false;
     const t=ONE_GUARD[a]?text.replace(ONE_GUARD[a],""):text;
-    return new RegExp("(^|[^가-힣])"+a+"(?=(?:이|가|을|를|은|는|에|의|도|만|랑|으로|로|한테|에게|께|부터|까지|처럼)?(?:[^가-힣]|$))").test(t);};
+    return new RegExp("(^|[^가-힣])"+a+"(?=(?:이|가|을|를|은|는|에서|에선|에는|에|의|도|만|랑|으로|로|한테|에게|께서|께|부터|까지|처럼|보다|조차|마저)?(?:[^가-힣]|$))").test(t);};
   /* 2자 이상 별칭 가드 — '그대로/뜻대로'의 '대로'가 大路로 오인되던 것 차단 (2026-10-10 실측: 별장 꿈에 '사방 큰길' 인용) */
   const MULTI_GUARD={"대로":/[가-힣]대로/g};
   const has=a=>a.length>1?(MULTI_GUARD[a]?text.replace(MULTI_GUARD[a],""):text).includes(a):one(a);
