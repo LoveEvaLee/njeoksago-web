@@ -1,10 +1,12 @@
-# N-jeok-sago — Balanced Dream Interpretation
+# Onbam (온밤) — Balanced Dream Interpretation
+
+*Onbam* means "a whole night" in Korean.
 
 [English] · [한국어](README.md)
 
 Write down your dream, and the app matches it against rules structured from traditional dream-interpretation literature, then returns one of five verdicts: **auspicious · ominous · mixed · neutral · withheld**.
 
-**▶ Try it: https://loveevalee.github.io/njeoksago-web/** (Korean UI)
+**▶ Try it: https://loveevalee.github.io/onbam-web/** (Korean UI)
 
 ## What makes it different
 
